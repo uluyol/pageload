@@ -64,8 +64,9 @@ date
 # assume that $HOME/shard_dl has already been created
 # should be created by run_shard.bash
 
-iter=0
-while true; do
+iter=$1
+
+for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 	start=$(date +%s)
 
 	IFS=$'\n'
@@ -75,39 +76,54 @@ while true; do
 	for site in "${sites[@]}"; do
 		for dev in "${EMULATE_DEVICES[@]}"; do
 			mkdir -p $HOME/shard_dl/$dev/$iter || true
+			if [[ ! -f $HOME/shard_dl/$dev/$iter/start ]]; then
+				(date; date +%s) > $HOME/shard_dl/$dev/$iter/start
+			fi
 
 			dev_json=$(jq ".[] | select(.device.title == \"$dev\").device" <<<"$DEVICE_CONFIGS")
-			user_agent=$(jq -r '."user-agent"' <<<"$dev_json")
+			user_agent=$(jq -r '.["user-agent"]' <<<"$dev_json")
 			win_w=$(jq -r '.screen.vertical.width' <<<"$dev_json")
 			win_h=$(jq -r '.screen.vertical.height' <<<"$dev_json")
 
+			echo user agent: $user_agent
+			echo win size: ${win_w}x${win_h}
+
 			echo iter $iter get $site dev $dev
-			(
-			sudo docker run --rm -i --privileged \
-				-v $HOME/shard_dl/$dev/$iter:/out \
-				%%MM_IMAGE%% \
-					bash -c "
-						timeout 25 \
-							xvfb-run --server-args='-screen 0, 1920x1080x16' \
-								dbus-launch --exit-with-session \
-									google-chrome \
-									--ignore-certificate-errors \
-									--user-agent \"$user_agent\" \
-									--window ${win_w}x${win_h} \
-									--user-data-dir=/tmp/fresh \
-									http://example.com; \
-						timeout 120 \
-							xvfb-run --server-args='-screen 0, 1920x1080x16' \
-								dbus-launch --exit-with-session \
-									mm-webrecord /out/$(clean_url $site) \
+			for ((try=0; try < 5; try++)); do
+				(
+				sudo docker run --rm -i --privileged \
+					-v $HOME/shard_dl/$dev/$iter:/out \
+					%%MM_IMAGE%% \
+						bash -c "
+							timeout 25 \
+								xvfb-run --server-args='-screen 0, 1920x1080x16' \
+									dbus-launch --exit-with-session \
 										google-chrome \
-											--ignore-certificate-errors \
-											--user-agent \"$user_agent\" \
-											--window ${win_w}x${win_h} \
-											--user-data-dir=/tmp/fresh \
-											\"$site\""
-			) || true
-			echo iter $iter get $site dev $dev
+										--ignore-certificate-errors \
+										--user-agent \"$user_agent\" \
+										--window ${win_w}x${win_h} \
+										--user-data-dir=/tmp/fresh \
+										http://example.com; \
+							timeout 120 \
+								xvfb-run --server-args='-screen 0, 1920x1080x16' \
+									dbus-launch --exit-with-session \
+										mm-webrecord /out/$(clean_url $site) \
+											google-chrome \
+												--ignore-certificate-errors \
+												--user-agent \"$user_agent\" \
+												--window ${win_w}x${win_h} \
+												--user-data-dir=/tmp/fresh \
+												\"$site\""
+				) &>/dev/null || true
+				if [[ -d $HOME/shard_dl/$dev/$iter/$(clean_url $site) ]]; then
+					break
+				fi
+			done
+			if [[ -d $HOME/shard_dl/$dev/$iter/$(clean_url $site) ]]; then
+				echo iter $iter got $site dev $dev
+			else
+				echo iter $iter fail $site dev $dev
+			fi
 		done
 	done
 	end=$(( start + (%%RECORD_TIME_MIN%% * 60) ))

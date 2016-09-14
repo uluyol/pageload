@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 rm -rf $HOME/shard_dl
 mkdir -p $HOME/shard_dl
-for ((w=0; w < %%WORKERS_PER_SHARD%%; w++)); do
-	bash $HOME/run_shard_worker_${w}.bash &
+iter=0
+
+sudo apt-get update -y -qq
+sudo apt-get install -y -qq jq
+
+while true; do
+	for ((w=0; w < %%WORKERS_PER_SHARD%%; w++)); do
+		bash $HOME/run_shard_worker_${w}.bash $iter &
+	done
+
+	for j in $(jobs -p); do
+		wait $j
+	done
+
+	((iter = iter + 10))
+
+	# Restart docker just in case there could be a
+	# problem with running out of fds.
+	sudo service docker restart
 done
 
 cat
