@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+rm -rf $HOME/shard_dl
+mkdir -p $HOME/shard_dl
+for ((w=0; w < %%WORKERS_PER_SHARD%%; w++)); do
+	bash $HOME/run_shard_worker_${w}.bash &
+done
+
+cat
