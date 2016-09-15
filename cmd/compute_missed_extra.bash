@@ -39,6 +39,10 @@ intersection() {
 		| awk "\$1 == $N { print \$2 }"
 }
 
+get_important() {
+	egrep '(javascript|ecmascript|html|css)'
+}
+
 WINDOW_SIZE=3
 
 sites_file=$1; shift
@@ -64,14 +68,20 @@ for s in $sites; do
 		runs=($(printf "%s\n" "${all_runs[@]}" | grep "^$dev" | sort -g -t/ -k2 | uniq))
 
 		dep_files=()
+		priority_dep_files=()
 		for r in "${runs[@]}"; do
-			get_offline_dep_list.bash "$s" "$r" > "$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}"
+			dep_list=$(GET_CONTENT_TYPES=true get_offline_dep_list.bash "$s" "$r")
+			cut -d' ' -f1 <<<"$dep_list" > "$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}"
+			get_important <<<"$dep_list" | cut -d' ' -f1 > "$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}"
 			dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
+			priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}")
 		done
 
 		mkdir -p "$resdir/sites/${dev}_${s_clean}"
 		rm -f "$resdir/sites/${dev}_${s_clean}/missed"
 		rm -f "$resdir/sites/${dev}_${s_clean}/extra"
+		rm -f "$resdir/sites/${dev}_${s_clean}/priority-missed"
+		rm -f "$resdir/sites/${dev}_${s_clean}/priority-extra"
 
 		for ((i=WINDOW_SIZE; i < ${#dep_files[@]}; i++)); do
 			(
@@ -90,6 +100,24 @@ for s in $sites; do
 
 			(perl -e "print (($nw - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/extra"
 			(perl -e "print (($na - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/missed"
+
+			(
+				for ((j=i-WINDOW_SIZE; j < i; j++)); do
+					cat "${priority_dep_files[j]}"
+				done
+			) | intersection "$WINDOW_SIZE" > "$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i"
+
+			cat "${priority_dep_files[i]}" "$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i" \
+				| intersection 2 \
+				> "$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i"
+
+			nw=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i")
+			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i")
+			na=$(wc -l <"${priority_dep_files[i]}")
+
+			(perl -e "print (($nw - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-extra"
+			(perl -e "print (($na - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-missed"
+
 		done
 	done
 done
