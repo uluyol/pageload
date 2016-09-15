@@ -34,6 +34,7 @@ pdf(output_pdf, height=5, width=8)
 options(warn = -1)
 	ggplot(data, aes(x=Value, color=Kind)) +
 		stat_ecdf() +
+		scale_x_continuous(breaks=xaxis.breaks, limits=c(NA, tail(xaxis.breaks, 1))) +
 		xlab(xaxis.label) +
 		ylab("Percentile") +
 		scale_color_brewer(palette="Dark2")
