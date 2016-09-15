@@ -71,5 +71,5 @@ for s in $sites; do
 	ni=$(wc -l <"$resdir/sites/$s_clean/intersection")
 	nu=$(wc -l <"$resdir/sites/$s_clean/union")
 
-	(perl -e "print $ni / $nu"; echo) > "$resdir/sites/$s_clean/iou_pct"
+	(perl -e "print ($ni / $nu)"; echo) > "$resdir/sites/$s_clean/iou_pct"
 done
