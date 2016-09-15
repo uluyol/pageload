@@ -38,12 +38,12 @@ func main() {
 		if err := proto.Unmarshal(data, &reqResp); err != nil {
 			log.Fatal(err)
 		}
-		firstLine := string(reqResp.Request.FirstLine)
+		firstLine := string(reqResp.GetRequest().GetFirstLine())
 		if !strings.HasPrefix(firstLine, "GET") {
 			continue
 		}
 
-		host := internal.MustGetHeader(reqResp.Request, "Host")
+		host := internal.MustGetHeader(reqResp.GetRequest(), "Host")
 		path := strings.Fields(strings.TrimSpace(strings.TrimPrefix(firstLine, "GET")))[0]
 
 		var url string

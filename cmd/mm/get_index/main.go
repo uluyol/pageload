@@ -52,12 +52,12 @@ LoopStart:
 		if err := proto.Unmarshal(data, &reqResp); err != nil {
 			log.Fatal(err)
 		}
-		firstLine := string(reqResp.Request.FirstLine)
+		firstLine := string(reqResp.GetRequest().GetFirstLine())
 		if !strings.HasPrefix(firstLine, "GET") {
 			continue
 		}
 
-		host := internal.MustGetHeader(reqResp.Request, "Host")
+		host := internal.MustGetHeader(reqResp.GetRequest(), "Host")
 		path := strings.Fields(strings.TrimSpace(strings.TrimPrefix(firstLine, "GET")))[0]
 
 		var url string
@@ -78,16 +78,16 @@ LoopStart:
 			fmt.Println(url)
 		}
 
-		code := strings.Fields(string(reqResp.Response.FirstLine))
+		code := strings.Fields(string(reqResp.GetResponse().FirstLine))
 		switch code[1] {
 		case "301", "302", "303":
-			site = internal.MustGetHeader(reqResp.Response, "location")
+			site = internal.MustGetHeader(reqResp.GetResponse(), "location")
 			goto LoopStart
 		}
 
 		chunked := false
 		gzipped := false
-		for _, h := range reqResp.Response.Header {
+		for _, h := range reqResp.GetResponse().Header {
 			if bytes.HasPrefix(bytes.ToLower(h.Key), []byte("transfer-encoding")) {
 				if bytes.Equal(h.Value, []byte("chunked")) {
 					chunked = true
@@ -100,7 +100,7 @@ LoopStart:
 			}
 		}
 
-		var r io.Reader = bytes.NewReader(reqResp.Response.Body)
+		var r io.Reader = bytes.NewReader(reqResp.GetResponse().Body)
 		if chunked {
 			r = internal.NewChunkedReader(r)
 		}
