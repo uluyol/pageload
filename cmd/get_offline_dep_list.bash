@@ -2,6 +2,7 @@
 
 set -e
 
+GET_CONTENT_TYPES=${GET_CONTENT_TYPES:-false}
 TOPDIR=$(realpath "${0%/*}"/..)
 
 export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR
@@ -31,9 +32,16 @@ clean_url() {
 get_sorted_offline_deps() {
 	local site="$1"
 	local iterdir="$2"
+	local get_content_types=$3
+
 	local savedir="$iterdir/$(clean_url "$site")"
 
-	combined=$(list_resources "$savedir" | sort | uniq)
+	local list_resources_args=""
+	if [[ $get_content_types == "true" ]]; then
+		list_resources_args="-types"
+	fi
+
+	combined=$(list_resources $list_resources_args "$savedir" | sort | uniq)
 	index_urls=$(get_index -urls "$site" "$savedir")
 	index_last_url=$(tail -n1 <<<"$index_urls")
 	index_html=$(get_index "$site" "$savedir")
@@ -41,7 +49,7 @@ get_sorted_offline_deps() {
 
 	to_remove=$(cat <(echo "$index_urls") <(echo "$online") | sort | uniq)
 
-	comm -23 <(echo "$combined") <(echo "$to_remove")
+	_internal_setdiff_ignore_types.py <(echo "$combined") <(echo "$to_remove")
 }
 
-get_sorted_offline_deps "$1" "$2"
+get_sorted_offline_deps "$1" "$2" "$GET_CONTENT_TYPES"
