@@ -30,7 +30,7 @@ while true; do
 				to_move="$dev/${iters[i]}"
 				echo get $n $to_move
 				(cd "$destdir" && SSH "$n" "cd shard_dl && tar cz $to_move" | timeout 300 tar -xzf -)
-				timeout 90 SSH "$n" "cd shard_dl && rm -rf $to_move"
+				timeout 90 ssh -o StrictHostKeyChecking=no "$n" "cd shard_dl && rm -rf $to_move"
 			done
 		done
 	done
