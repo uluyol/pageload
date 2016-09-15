@@ -19,7 +19,12 @@ clean_url() {
 	if [[ $site =~ ^www\. ]]; then
 		site=${site:4}
 	fi
-	echo "$site"
+	echo "$site" \
+		| sed \
+			-e 's,/,_,g' \
+			-e 's,?,__,g' \
+			-e 's,%,__,g' \
+			-e 's,&,__,g'
 }
 
 # reads network events on stdin
