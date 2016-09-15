@@ -37,6 +37,8 @@ class DepExtractor(HTMLParser.HTMLParser):
 
 if __name__ == "__main__":
 	url = sys.argv[1]
+	reload(sys)
+	sys.setdefaultencoding('utf8')
 	extractor = DepExtractor(sys.stdout, url)
 	for line in sys.stdin:
 		extractor.feed(line)
