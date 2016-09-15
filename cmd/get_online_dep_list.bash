@@ -29,7 +29,7 @@ clean_url() {
 }
 
 # reads network events on stdin
-get_sorted_offline_deps() {
+get_sorted_online_deps() {
 	local site="$1"
 	local iterdir="$2"
 	local get_content_types=$3
@@ -47,9 +47,7 @@ get_sorted_offline_deps() {
 	index_html=$(get_index "$site" "$savedir")
 	online=$(_internal_get_online_deps.py "$index_last_url" <<<"$index_html")
 
-	to_remove=$(cat <(echo "$index_urls") <(echo "$online") | sort | uniq)
-
-	_setops_ignore_types.py setdiff <(echo "$combined") <(echo "$to_remove")
+	_setops_ignore_types.py intersection <(echo "$combined") <(echo "$online")
 }
 
-get_sorted_offline_deps "$1" "$2" "$GET_CONTENT_TYPES"
+get_sorted_online_deps "$1" "$2" "$GET_CONTENT_TYPES"
