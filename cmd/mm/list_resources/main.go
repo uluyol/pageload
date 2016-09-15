@@ -1,10 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -13,11 +13,15 @@ import (
 	pb "github.com/uluyol/pageload/cmd/mm/proto"
 )
 
+var printContentType = flag.Bool("types", false, "print content-types of resources")
+
 func main() {
 	log.SetPrefix("get_index: ")
 	log.SetFlags(0)
 
-	saveDir := os.Args[1]
+	flag.Parse()
+
+	saveDir := flag.Arg(0)
 
 	fis, err := ioutil.ReadDir(saveDir)
 	if err != nil {
@@ -55,6 +59,16 @@ func main() {
 		default:
 			log.Fatalf("unknown scheme: %v", reqResp.Scheme)
 		}
-		fmt.Println(url)
+
+		if *printContentType {
+			ctype, err := internal.GetHeader(reqResp.GetResponse(), "content-type")
+			if err != nil {
+				ctype = "unknown"
+			}
+
+			fmt.Printf("%s %s\n", url, ctype)
+		} else {
+			fmt.Println(url)
+		}
 	}
 }
