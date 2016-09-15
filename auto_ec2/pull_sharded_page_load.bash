@@ -27,7 +27,7 @@ while true; do
 		for dev in $(SSH "$n" "ls -1 shard_dl"); do
 			iters=($(SSH "$n" "ls -1 shard_dl/$dev" | sort -g))
 			# leave the last two for now, they may be incomplete
-			for ((i=0; i < ${#iters[@]}-2; i++)); do
+			for ((i=0; i < ${#iters[@]}-3; i++)); do
 				to_move="$dev/${iters[i]}"
 				echo get $n $to_move
 				(cd "$destdir" && SSH "$n" "cd shard_dl && tar cz $to_move" | timeout 300 tar -xzf -)
