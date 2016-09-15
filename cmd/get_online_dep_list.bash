@@ -41,10 +41,10 @@ get_sorted_online_deps() {
 		list_resources_args="-types"
 	fi
 
-	combined=$(list_resources $list_resources_args "$savedir" | sort | uniq)
 	index_urls=$(get_index -urls "$site" "$savedir")
 	index_last_url=$(tail -n1 <<<"$index_urls")
 	index_html=$(get_index "$site" "$savedir")
+	combined=$(list_resources $list_resources_args "$index_last_url" "$savedir" | sort | uniq)
 	online=$(_internal_get_online_deps.py "$index_last_url" <<<"$index_html" | sort)
 
 	_setops_ignore_types.py intersection <(echo "$combined") <(echo "$online")

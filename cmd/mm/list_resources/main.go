@@ -14,6 +14,7 @@ import (
 )
 
 var printContentType = flag.Bool("types", false, "print content-types of resources")
+var skipIframeDeps = flag.Bool("noiframedeps", true, "don't show iframe dependencies")
 
 func main() {
 	log.SetPrefix("get_index: ")
@@ -21,7 +22,8 @@ func main() {
 
 	flag.Parse()
 
-	saveDir := flag.Arg(0)
+	indexURL := flag.Arg(0)
+	saveDir := flag.Arg(1)
 
 	fis, err := ioutil.ReadDir(saveDir)
 	if err != nil {
@@ -58,6 +60,15 @@ func main() {
 			url = "https://" + host + path
 		default:
 			log.Fatalf("unknown scheme: %v", reqResp.Scheme)
+		}
+
+		referer, err := internal.GetHeader(reqResp.GetRequest(), "referer")
+		if err != nil {
+			referer = ""
+		}
+
+		if *skipIframeDeps && internal.CleanURL(referer) != internal.CleanURL(indexURL) {
+			continue
 		}
 
 		if *printContentType {

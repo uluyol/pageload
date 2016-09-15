@@ -87,6 +87,8 @@ for s in $sites; do
 			priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}")
 			online_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}")
 			online_priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-priority-${r//\//.}")
+
+			echo $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}") : $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 		done
 
 		mkdir -p "$resdir/sites/${dev}_${s_clean}"
@@ -147,15 +149,8 @@ for s in $sites; do
 			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i")
 			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i")
 
-			z=$(perl -e "print (($nw - $no) / $na)"; echo)
-			echo $z >> "$resdir/sites/${dev}_${s_clean}/priority-extra"
-			z2=$(perl -e "print (($na - $no) / $na)"; echo)
-			echo $z2 >> "$resdir/sites/${dev}_${s_clean}/priority-missed"
-
-			if grep -- '-' <<<"$z2" &>/dev/null; then
-				echo $dev $s_clean $nw $no $na
-			fi
-
+			(perl -e "print (($nw - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-extra"
+			(perl -e "print (($na - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-missed"
 		done
 	done
 done
