@@ -45,7 +45,7 @@ get_sorted_online_deps() {
 	index_urls=$(get_index -urls "$site" "$savedir")
 	index_last_url=$(tail -n1 <<<"$index_urls")
 	index_html=$(get_index "$site" "$savedir")
-	online=$(_internal_get_online_deps.py "$index_last_url" <<<"$index_html")
+	online=$(_internal_get_online_deps.py "$index_last_url" <<<"$index_html" | sort)
 
 	_setops_ignore_types.py intersection <(echo "$combined") <(echo "$online")
 }
