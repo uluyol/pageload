@@ -1,5 +1,13 @@
 .PHONY: proto
 
+BINS := \
+	bin/get_index \
+	bin/list_resources \
+	vaultbin/get_index \
+	vaultbin/list_resources
+
+all: bins
+
 proto: http_record_pb2.py proto/http_record.pb.go
 
 http_record_pb2.py: http_record.proto
@@ -15,9 +23,9 @@ bin:
 vaultbin:
 	mkdir vaultbin || true
 
-bins: bin/get_index bin/list_resources vaultbin/get_index vaultbin/list_resources
+bins: $(BINS)
 
-bin/%: %/* proto/* bin
+bin/%: %/* proto/http_record.pb.go bin
 	GOBIN=$(CURDIR)/bin go install ./$*
 
 vaultbin/%: %/* proto/* vaultbin
