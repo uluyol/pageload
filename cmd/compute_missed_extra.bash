@@ -4,7 +4,7 @@ set -e
 
 TOPDIR=$(realpath "${0%/*}"/..)
 
-export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR
+export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR:$TOPDIR/cmd/filterads
 
 remove_comments_empty() {
 	sed 's/#.*$//g' | sed '/^$/d'
@@ -36,14 +36,15 @@ intersection() {
 
 	sort \
 		| uniq -c \
-		| awk "\$1 == $N { print \$2 }"
+		| awk "\$1 >= $N { print \$2 }"
 }
 
 get_important() {
 	egrep '(javascript|ecmascript|html|css)'
 }
 
-WINDOW_SIZE=3
+WINDOW_SIZE=4
+ALLOW_MISSING=1
 
 sites_file=$1; shift
 all_runs=("$@")
@@ -57,6 +58,14 @@ unset IFS
 
 procdir=$(mktemp -d)
 trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
+
+"$TOPDIR/cmd/filterads/runserver.bash" --tracking &
+pid=$!
+trap "kill -9 $pid" SIGTERM SIGQUIT EXIT SIGINT
+
+while ! (lsof -n -iTCP:3000 | grep LISTEN) &>/dev/null; do
+	sleep 1
+done
 
 mkdir -p "$procdir/sites"
 mkdir -p "$resdir" || true
@@ -72,8 +81,8 @@ for s in $sites; do
 		online_dep_files=()
 		online_priority_dep_files=()
 		for r in "${runs[@]}"; do
-			offline_deps=$(GET_CONTENT_TYPES=true get_offline_dep_list.bash "$s" "$r")
-			online_deps=$(GET_CONTENT_TYPES=true get_online_dep_list.bash "$s" "$r")
+			offline_deps=$(GET_CONTENT_TYPES=true get_offline_dep_list.bash "$s" "$r" | filterads.py "$s")
+			online_deps=$(GET_CONTENT_TYPES=true get_online_dep_list.bash "$s" "$r" | filterads.py "$s")
 
 			cut -d' ' -f1 <<<"$offline_deps" > "$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}"
 			get_important <<<"$offline_deps" \
@@ -102,7 +111,7 @@ for s in $sites; do
 				for ((j=i-WINDOW_SIZE; j < i; j++)); do
 					cat "${dep_files[j]}"
 				done
-			) | intersection "$WINDOW_SIZE" \
+			) | intersection "$((WINDOW_SIZE-ALLOW_MISSING))" \
 				| cat - "${online_dep_files[i]}" \
 				| sort \
 				| uniq \
@@ -122,14 +131,14 @@ for s in $sites; do
 			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i")
 			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_test_$i")
 
-			(perl -e "print (($nw - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/extra"
-			(perl -e "print (($na - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/missed"
+			(python -c "print (float($nw - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/extra"
+			(python -c "print (float($na - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/missed"
 
 			(
 				for ((j=i-WINDOW_SIZE; j < i; j++)); do
 					cat "${priority_dep_files[j]}"
 				done
-			) | intersection "$WINDOW_SIZE" \
+			) | intersection "$((WINDOW_SIZE-ALLOW_MISSING))" \
 				| cat - "${online_priority_dep_files[i]}" \
 				| sort \
 				| uniq \
@@ -149,8 +158,8 @@ for s in $sites; do
 			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i")
 			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i")
 
-			(perl -e "print (($nw - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-extra"
-			(perl -e "print (($na - $no) / $na)"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-missed"
+			(python -c "print (float($nw - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-extra"
+			(python -c "print (float($na - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-missed"
 		done
 	done
 done
