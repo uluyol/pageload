@@ -2,9 +2,13 @@
 
 set -e
 
+FILTER_ADS=${FILTER_ADS:-1}
+WINDOW_SIZE=4
+ALLOW_MISSING=1
+
 TOPDIR=$(realpath "${0%/*}"/..)
 
-export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR:$TOPDIR/cmd/filterads
+export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR/cmd/internal:$TOPDIR:$TOPDIR/cmd/filterads
 
 remove_comments_empty() {
 	sed 's/#.*$//g' | sed '/^$/d'
@@ -43,9 +47,6 @@ get_important() {
 	egrep '(javascript|ecmascript|html|css)'
 }
 
-WINDOW_SIZE=4
-ALLOW_MISSING=1
-
 sites_file=$1; shift
 all_runs=("$@")
 devices=($(printf "%s\n" "${all_runs[@]}" | cut -d/ -f1 | sort | uniq))
@@ -81,8 +82,15 @@ for s in $sites; do
 		online_dep_files=()
 		online_priority_dep_files=()
 		for r in "${runs[@]}"; do
-			offline_deps=$(GET_CONTENT_TYPES=true get_offline_dep_list.bash "$s" "$r" | filterads.py "$s")
-			online_deps=$(GET_CONTENT_TYPES=true get_online_dep_list.bash "$s" "$r" | filterads.py "$s")
+			extracted_data=$(extract_records_index "$s" "$r/$(clean_url "$s")" | clip_after_iframes)
+
+			offline_deps=$(extracted_get_offline_dep_list.bash <<<"$extracted_data")
+			online_deps=$(extracted_get_online_dep_list.bash <<<"$extracted_data")
+
+			if [[ $FILTER_ADS -eq 1 ]]; then
+				offline_deps=$(filterads.py "$s" <<<"$offline_deps")
+				online_deps=$(filterads.py "$s" <<<"$online_deps")
+			fi
 
 			cut -d' ' -f1 <<<"$offline_deps" > "$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}"
 			get_important <<<"$offline_deps" \
