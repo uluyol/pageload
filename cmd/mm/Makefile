@@ -1,9 +1,11 @@
 .PHONY: proto
 
 BINS := \
+	bin/clip_after_iframes \
 	bin/extract_records_index \
 	bin/get_index \
 	bin/list_resources \
+	vaultbin/clip_after_iframes \
 	vaultbin/extract_records_index \
 	vaultbin/get_index \
 	vaultbin/list_resources
