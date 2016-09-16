@@ -1,8 +1,10 @@
 .PHONY: proto
 
 BINS := \
+	bin/extract_records_index \
 	bin/get_index \
 	bin/list_resources \
+	vaultbin/extract_records_index \
 	vaultbin/get_index \
 	vaultbin/list_resources
 
