@@ -8,9 +8,12 @@ EMULATE_DEVICES=(
 	nexus10
 )
 
-RECORD_TIME_MIN=30
-WORKERS_PER_SHARD=20
-MM_IMAGE=quay.io/uluyol/pageload-mahimahi:0.3
+RECORD_TIME_MIN=60
+WORKERS_PER_SHARD=10
+CHROME_INIT_LOAD_WAIT=5
+CHROME_STARTUP_WAIT=8
+SITE_LOAD_WAIT=100
+MM_IMAGE=quay.io/uluyol/pageload-mahimahi:0.4
 
 remove_comments_empty() {
 	sed 's/#.*$//g' | sed '/^$/d'
@@ -58,6 +61,9 @@ for ((i=0; i < ${#nodes[@]}; i++)); do
 				-e "s|%%WIN_WS%%|$WIN_W|g" \
 				-e "s|%%WIN_HS%%|$WIN_H|g" \
 				-e "s/%%RECORD_TIME_MIN%%/$RECORD_TIME_MIN/g" \
+				-e "s/%%CHROME_INIT_LOAD_WAIT%%/$CHROME_INIT_LOAD_WAIT/g" \
+				-e "s/%%CHROME_STARTUP_WAIT%%/$CHROME_STARTUP_WAIT/g" \
+				-e "s/%%SITE_LOAD_WAIT%%/$SITE_LOAD_WAIT/g" \
 			| ssh "${nodes[i]}" "cat >run_shard_worker_${j}.bash && chmod +x run_shard_worker_${j}.bash"
 	done
 

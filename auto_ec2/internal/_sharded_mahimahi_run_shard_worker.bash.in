@@ -66,6 +66,9 @@ date
 
 iter=$1
 
+echo pull image
+sudo docker pull %%MM_IMAGE%% &>/dev/null || true
+
 for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 	start=$(date +%s)
 
@@ -75,7 +78,7 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 
 	for site in "${sites[@]}"; do
 		for dev in "${EMULATE_DEVICES[@]}"; do
-			mkdir -p $HOME/shard_dl/$dev/$iter || true
+			mkdir -p $HOME/shard_dl/$dev/$iter/hars || true
 			if [[ ! -f $HOME/shard_dl/$dev/$iter/start ]]; then
 				(date; date +%s) > $HOME/shard_dl/$dev/$iter/start
 			fi
@@ -91,29 +94,18 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 			echo iter $iter get $site dev $dev
 			for ((try=0; try < 5; try++)); do
 				(
-				sudo docker run --rm -i --privileged \
+				sudo docker run --rm --privileged \
 					-v $HOME/shard_dl/$dev/$iter:/out \
 					%%MM_IMAGE%% \
-						bash -c "
-							timeout 25 \
-								xvfb-run --server-args='-screen 0, 1920x1080x16' \
-									dbus-launch --exit-with-session \
-										google-chrome \
-										--ignore-certificate-errors \
-										--user-agent \"$user_agent\" \
-										--window ${win_w}x${win_h} \
-										--user-data-dir=/tmp/fresh \
-										http://example.com; \
-							timeout 120 \
-								xvfb-run --server-args='-screen 0, 1920x1080x16' \
-									dbus-launch --exit-with-session \
-										mm-webrecord /out/$(clean_url $site) \
-											google-chrome \
-												--ignore-certificate-errors \
-												--user-agent \"$user_agent\" \
-												--window ${win_w}x${win_h} \
-												--user-data-dir=/tmp/fresh \
-												\"$site\""
+						record_mm_har.bash \
+							%%CHROME_INIT_LOAD_WAIT%% \
+							%%CHROME_STARTUP_WAIT%% \
+							%%SITE_LOAD_WAIT%% \
+							/out/$(clean_url $site) \
+							/out/hars/$(clean_url $site) \
+							"$site" \
+							"$user_agent" \
+							"${win_w}x${win_h}"
 				) &>/dev/null || true
 				if [[ -d $HOME/shard_dl/$dev/$iter/$(clean_url $site) ]]; then
 					break
