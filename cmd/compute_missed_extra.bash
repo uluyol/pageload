@@ -58,15 +58,18 @@ sites=$(remove_comments_empty <"$sites_file")
 unset IFS
 
 procdir=$(mktemp -d)
-trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
+#trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
+echo $procdir
 
-"$TOPDIR/cmd/filterads/runserver.bash" --tracking &
-pid=$!
-trap "kill -9 $pid" SIGTERM SIGQUIT EXIT SIGINT
+if [[ $FILTER_ADS -eq 1 ]]; then
+	"$TOPDIR/cmd/filterads/runserver.bash" --tracking &
+	pid=$!
+	trap "kill -9 $pid" SIGTERM SIGQUIT EXIT SIGINT
 
-while ! (lsof -n -iTCP:3000 | grep LISTEN) &>/dev/null; do
-	sleep 1
-done
+	while ! (lsof -n -iTCP:3000 | grep LISTEN) &>/dev/null; do
+		sleep 1
+	done
+fi
 
 mkdir -p "$procdir/sites"
 mkdir -p "$resdir" || true
@@ -90,43 +93,26 @@ for s in $sites; do
 		filtered_depbytes_ratios_overall=()
 		filtered_depbytes_ratios_offline=()
 		for r in "${runs[@]}"; do
-			extracted_data=$(extract_records_index "$s" "$r/$(clean_url "$s")" | clip_after_iframes)
-
-			offline_deps=$(extracted_get_offline_dep_list.bash <<<"$extracted_data")
-			online_deps=$(extracted_get_online_dep_list.bash <<<"$extracted_data")
-
-			if [[ $FILTER_ADS -eq 1 ]]; then
-				n_on=$(wc -l <<<"$online_deps")
-				b_on=$(cut -d' ' -f2 <<<"$online_deps" | awk '{sum = sum + $1} END {print sum}')
-
-				n_off_all=$(wc -l <<<"$offline_deps")
-				b_off_all=$(cut -d' ' -f2 <<<"$offline_deps" | awk '{sum = sum + $1} END {print sum}')
-				offline_deps=$(filterads.py "$s" <<<"$offline_deps")
-				n_off_noads=$(wc -l <<<"$offline_deps")
-				b_off_noads=$(cut -d' ' -f2 <<<"$offline_deps" | awk '{sum = sum + $1} END {print sum}')
-
-				filtered_depcount_ratios_overall+=(
-					$(python -c "print (float($n_on+$n_off_noads) / max($n_on+$n_off_all, 1))"))
-				filtered_depcount_ratios_offline+=(
-					$(python -c "print (float($n_off_noads) / max($n_off_all, 1))"))
-				filtered_depbytes_ratios_overall+=(
-					$(python -c "print (float($b_on+$b_off_noads) / max($b_on+$b_off_all, 1))"))
-				filtered_depbytes_ratios_offline+=(
-					$(python -c "print (float($b_off_noads) / max($b_off_all, 1))"))
-			else
-				filtered_depcount_ratios_overall+=(0)
-				filtered_depcount_ratios_offline+=(0)
-				filtered_depbytes_ratios_overall+=(0)
-				filtered_depbytes_ratios_offline+=(0)
+			if [[ ! -d "$r/$(clean_url "$s")" ]]; then
+				// skip missing directories, not much we can do here
+				continue
 			fi
-
-			cut -d' ' -f1 <<<"$offline_deps" > "$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}"
-			get_important <<<"$offline_deps" \
-				| cut -d' ' -f1 > "$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}"
-
-			cut -d' ' -f1 <<<"$online_deps" > "$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}"
-			get_important <<<"$online_deps" \
-				| cut -d' ' -f1 > "$procdir/sites/${dev}_${s_clean}/runs/online-priority-${r//\//.}"
+			extracted_data=$(extract_records_index "$s" "$r/$(clean_url "$s")" | clip_after_iframes)
+			args=""
+			if [[ $FILTER_ADS -eq 1 ]]; then
+				args="--filter"
+			fi
+			ratios=($(
+				get_run_deps_filtered_counts.py \
+					$args \
+					"$procdir/sites/${dev}_${s_clean}/runs" \
+					"${r//\//.}" \
+					<<<"$extracted_data"
+			))
+			filtered_depcount_ratios_overall+=(${ratios[0]})
+			filtered_depcount_ratios_offline+=(${ratios[1]})
+			filtered_depbytes_ratios_overall+=(${ratios[2]})
+			filtered_depbytes_ratios_offline+=(${ratios[3]})
 
 			dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 			priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}")
