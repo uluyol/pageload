@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -29,10 +28,11 @@ type Result struct {
 }
 
 type ResourceMeta struct {
-	Bytes       int64  `json:"bytes"`
-	URL         string `json:"url"`
-	ContentType string `json:"contentType"`
-	Referer     string `json:"referer"`
+	Bytes        int64  `json:"bytes"`
+	URL          string `json:"url"`
+	ContentType  string `json:"contentType"`
+	Referer      string `json:"referer"`
+	CacheControl string `json:"cacheControl"`
 }
 
 func getResourceMeta(rr pb.RequestResponse) ResourceMeta {
@@ -50,13 +50,7 @@ func getResourceMeta(rr pb.RequestResponse) ResourceMeta {
 		log.Fatalf("unknown scheme: %v", *rr.Scheme)
 	}
 
-	var bytes int64
-	slen, err := internal.GetHeader(rr.GetResponse(), "content-length")
-	if err == nil {
-		if n, err := strconv.ParseInt(slen, 10, 64); err == nil {
-			bytes = n
-		}
-	}
+	bytes := int64(len(rr.GetResponse().GetBody()))
 
 	ctype, err := internal.GetHeader(rr.GetResponse(), "content-type")
 	if err != nil {
@@ -68,11 +62,17 @@ func getResourceMeta(rr pb.RequestResponse) ResourceMeta {
 		referer = ""
 	}
 
+	cacheControl, err := internal.GetHeader(rr.GetResponse(), "cache-control")
+	if err != nil {
+		cacheControl = ""
+	}
+
 	return ResourceMeta{
-		Bytes:       bytes,
-		URL:         url,
-		ContentType: ctype,
-		Referer:     referer,
+		Bytes:        bytes,
+		URL:          url,
+		ContentType:  ctype,
+		Referer:      referer,
+		CacheControl: cacheControl,
 	}
 }
 

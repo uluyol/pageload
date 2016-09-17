@@ -13,5 +13,5 @@ online=$(jq -r .indexBody <<<"$extracted" | _internal_get_online_deps.py "$index
 to_remove=$(cat <(echo "$index_urls") <(echo "$online") | sort | uniq)
 
 _setops_ignore_types.py setdiff \
-	<(jq -r '.resources[] | .url + " " + .contentType' <<<"$extracted" | sort) \
+	<(jq -r '.resources[] | .url + " " + (.bytes | tostring) + " " + .contentType' <<<"$extracted" | sort) \
 	<(echo "$to_remove" | sort)
