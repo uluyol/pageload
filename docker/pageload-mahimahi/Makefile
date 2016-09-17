@@ -1,5 +1,5 @@
 REPO = quay.io/uluyol/pageload-mahimahi
-TAG = 0.3
+TAG = 0.4
 
 .PHONY: build push
 
