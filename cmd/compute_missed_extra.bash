@@ -136,7 +136,7 @@ for s in $sites; do
 			echo $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}") : $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 		done
 
-		mkdir -p "$resdir/sites/${dev}_${s_clean}"
+		mkdir -p "$resdir/sites/${dev}_${s_clean}/lists"
 		rm -f "$resdir/sites/${dev}_${s_clean}/missed"
 		rm -f "$resdir/sites/${dev}_${s_clean}/extra"
 		rm -f "$resdir/sites/${dev}_${s_clean}/priority-missed"
@@ -172,6 +172,11 @@ for s in $sites; do
 			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i")
 			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_test_$i")
 
+			comm -23 \
+				"$procdir/sites/${dev}_${s_clean}/deps_test_$i" \
+				"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i" \
+				>"$resdir/sites/${dev}_${s_clean}/lists/missed"
+
 			(python -c "print (float($nw - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/extra"
 			(python -c "print (float($na - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/missed"
 
@@ -194,6 +199,11 @@ for s in $sites; do
 				"$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i" \
 				| intersection 2 \
 				> "$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i"
+
+			comm -23 \
+				"$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i" \
+				"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i" \
+				>"$resdir/sites/${dev}_${s_clean}/lists/priority-missed"
 
 			nw=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i")
 			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i")
