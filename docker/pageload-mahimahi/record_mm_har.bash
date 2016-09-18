@@ -17,7 +17,7 @@ timeout $first_wait \
 			--user-agent "$user_agent" \
 			--window $dims \
 			--user-data-dir=/tmp/fresh \
-			http://example.com
+			about:blank
 # this timeout shouldn't trigger, it's just a backup
 # to keep making progress if something terrible
 # happens

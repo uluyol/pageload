@@ -24,6 +24,6 @@ timeout $second_wait \
 		-t localhost \
 		-p 9922 \
 		-a "$user_agent" \
-		"$site" \
-		>"$har_out" || exit 1
+		-o "$har_out" \
+		"$site" || exit 1
 kill -9 $pid
