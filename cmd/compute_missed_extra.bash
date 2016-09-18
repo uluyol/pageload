@@ -96,6 +96,11 @@ for s in $sites; do
 		filtered_depcount_ratios_offline=()
 		filtered_depbytes_ratios_overall=()
 		filtered_depbytes_ratios_offline=()
+
+		b2b_depcount_ratios_overall=()
+		b2b_depcount_ratios_offline=()
+		b2b_depbytes_ratios_overall=()
+		b2b_depbytes_ratios_offline=()
 		for r in "${runs[@]}"; do
 			if [[ ! -d "$r.0/$(clean_url "$s")" ]] \
 				|| [[ ! -f "$r.0/hars/$(clean_url "$s")" ]] \
@@ -126,6 +131,11 @@ for s in $sites; do
 			filtered_depbytes_ratios_overall+=(${ratios[2]})
 			filtered_depbytes_ratios_offline+=(${ratios[3]})
 
+			b2b_depcount_ratios_overall+=(${ratios[4]})
+			b2b_depcount_ratios_offline+=(${ratios[5]})
+			b2b_depbytes_ratios_overall+=(${ratios[6]})
+			b2b_depbytes_ratios_offline+=(${ratios[7]})
+
 			dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 			priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}")
 			online_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}")
@@ -140,10 +150,23 @@ for s in $sites; do
 		rm -f "$resdir/sites/${dev}_${s_clean}/priority-missed"
 		rm -f "$resdir/sites/${dev}_${s_clean}/priority-extra"
 
-		printf "%s\n" "${filtered_depcount_ratios_overall[@]}" > "$resdir/sites/${dev}_${s_clean}/depcount-ratio-overall"
-		printf "%s\n" "${filtered_depcount_ratios_offline[@]}" > "$resdir/sites/${dev}_${s_clean}/depcount-ratio-offline"
-		printf "%s\n" "${filtered_depbytes_ratios_overall[@]}" > "$resdir/sites/${dev}_${s_clean}/depbytes-ratio-overall"
-		printf "%s\n" "${filtered_depbytes_ratios_offline[@]}" > "$resdir/sites/${dev}_${s_clean}/depbytes-ratio-offline"
+		printf "%s\n" "${filtered_depcount_ratios_overall[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/depcount-ratio-overall"
+		printf "%s\n" "${filtered_depcount_ratios_offline[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/depcount-ratio-offline"
+		printf "%s\n" "${filtered_depbytes_ratios_overall[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/depbytes-ratio-overall"
+		printf "%s\n" "${filtered_depbytes_ratios_offline[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/depbytes-ratio-offline"
+
+		printf "%s\n" "${b2b_depcount_ratios_overall[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/b2b-depcount-ratio-overall"
+		printf "%s\n" "${b2b_depcount_ratios_offline[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/b2b-depcount-ratio-offline"
+		printf "%s\n" "${b2b_depbytes_ratios_overall[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/b2b-depbytes-ratio-overall"
+		printf "%s\n" "${b2b_depbytes_ratios_offline[@]}" \
+			> "$resdir/sites/${dev}_${s_clean}/b2b-depbytes-ratio-offline"
 
 		for ((i=WINDOW_SIZE; i < ${#dep_files[@]}; i++)); do
 			(
