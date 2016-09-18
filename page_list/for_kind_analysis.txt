@@ -1,38 +1,40 @@
+http://fortune.com/
+
 # Landing pages
-http://www.cnn.com/
-http://www.cnn.com/africa
-http://www.cnn.com/asia
-http://www.cnn.com/entertainment
-http://www.cnn.com/europe
-http://www.cnn.com/health
-http://www.cnn.com/middle-east
-http://www.cnn.com/tech
-http://www.cnn.com/opinions
-http://www.cnn.com/world
+http://fortune.com/international/
+http://fortune.com/retail/
+http://fortune.com/luxury/
+http://fortune.com/the-21st-century-corporation/
+http://fortune.com/careers/
+http://fortune.com/energy/
+http://fortune.com/autos/
+http://fortune.com/leadership/
+http://fortune.com/sports/
+http://fortune.com/venture/
+
+# Info pages
+http://beta.fortune.com/fortune500/apple-3
+http://beta.fortune.com/fortune500/mckesson-5
+http://beta.fortune.com/fortune500/general-motors-8
+http://beta.fortune.com/fortune500/ford-motor-9
+http://beta.fortune.com/fortune500/general-electric-11
+http://beta.fortune.com/fortune500/verizon-communications-13
+http://beta.fortune.com/fortune500/walmart-1
+http://beta.fortune.com/fortune500/amazon-com-18
+http://beta.fortune.com/fortune500/wells-fargo-27
+http://beta.fortune.com/fortune500/costco-wholesale-15
 
 # Articles
-http://www.cnn.com/2012/08/14/tech/steve-jobs-home-burglarized/
-http://www.cnn.com/2013/04/21/sport/football/luis-suarez-liverpool-chelsea-football/
-http://www.cnn.com/2014/03/05/tech/gaming-gadgets/roku-streaming-stick/index.html
-http://www.cnn.com/2014/03/12/opinion/abend-malaysia-370/
-http://www.cnn.com/2015/04/19/africa/libya-isis-executions-ethiopian-christians/
-http://www.cnn.com/2015/04/20/health/iowa-bird-flu/
-http://www.cnn.com/2016/08/05/entertainment/nine-lives-kevin-spacey/index.html
-http://www.cnn.com/2016/08/11/asia/pokemon-go-dangers-bans/
-http://www.cnn.com/2016/08/19/health/pregnancy-adhd-unhealthy-diet/index.html
-http://www.cnn.com/2016/09/08/opinions/david-miliband-afghanistan-opinion/index.html
-
-# Videos
-http://www.cnn.com/videos/cnnmoney/2016/08/29/mtv-vma-carpet-stars-favorite-music-videos-cnnmoney.cnn
-http://www.cnn.com/videos/cnnmoney/2016/09/07/tim-cook-james-corden-carpool-karaoke-cnnmoney.cnn
-http://www.cnn.com/videos/cnnmoney/2016/09/07/tom-hanks-captain-sully-is-a-hero.cnn
-http://www.cnn.com/videos/health/2016/09/06/uga-crash-agnes-kim-speaks-orig-vstan.cnn
-http://www.cnn.com/videos/health/2016/09/09/cystic-fibrosis-couple-katie-prager-hospice-orig-mss.cnn
-http://www.cnn.com/videos/studentnews/2016/05/15/sn-0516.cnn
-http://www.cnn.com/videos/tech/2016/08/05/declassified-ep-8-hexagon-2.cnn
-http://www.cnn.com/videos/travel/2016/05/13/tsa-security-lines-mobilel-orig-mss.cnn
-http://www.cnn.com/videos/travel/2016/09/06/cape-kiwanda-rock-landmark-vandals-video-pkg.koin
-http://www.cnn.com/videos/us/2016/06/29/what-is-cryptography-declassified-mike-rogers-orig.cnn
+http://fortune.com/2016/09/16/julian-assange-chelsea-manning/
+http://fortune.com/2016/09/16/donald-trump-mark-cuban-twitter-fight/
+http://fortune.com/2016/09/17/trump-childcare-prop-problem/
+http://fortune.com/2016/09/17/colonial-pipeline-repair/
+http://fortune.com/2011/09/11/steve-jobs-death-tweet-costs-shira-lazar-her-cbs-news-gig/
+http://fortune.com/2016/01/05/wall-street-women-financial-crisis/
+http://fortune.com/2014/10/29/los-angeles-nfl-football-team/
+http://fortune.com/2011/06/16/a-whos-who-of-hackers/
+http://fortune.com/2016/01/21/bernie-sanders-winning-white-house/
+http://fortune.com/2012/02/09/akio-toyoda-toyotas-comeback-kid/
 
 # Landing pages (different languages)
 https://news.google.com/
@@ -117,7 +119,6 @@ http://www.espn.com/mlb/team/stats/batting/_/name/pit
 http://www.espn.com/mlb/team/stats/batting/_/name/sf
 http://www.espn.com/mlb/team/stats/batting/_/name/tb
 http://www.espn.com/mlb/team/stats/batting/_/name/tor
-
 
 http://m.shutterstock.com/
 
