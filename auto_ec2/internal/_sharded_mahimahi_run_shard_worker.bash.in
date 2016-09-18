@@ -69,6 +69,8 @@ iter=$1
 echo pull image
 sudo docker pull %%MM_IMAGE%% &>/dev/null || true
 
+sleep $((RANDOM % 30))
+
 for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 	start=$(date +%s)
 
@@ -78,9 +80,13 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 
 	for site in "${sites[@]}"; do
 		for dev in "${EMULATE_DEVICES[@]}"; do
-			mkdir -p $HOME/shard_dl/$dev/$iter/hars || true
-			if [[ ! -f $HOME/shard_dl/$dev/$iter/start ]]; then
-				(date; date +%s) > $HOME/shard_dl/$dev/$iter/start
+			mkdir -p $HOME/shard_dl/$dev/$iter.0/hars || true
+			mkdir -p $HOME/shard_dl/$dev/$iter.1/hars || true
+			if [[ ! -f $HOME/shard_dl/$dev/$iter.0/start ]]; then
+				(date; date +%s) > $HOME/shard_dl/$dev/$iter.0/start
+			fi
+			if [[ ! -f $HOME/shard_dl/$dev/$iter.1/start ]]; then
+				(date; date +%s) > $HOME/shard_dl/$dev/$iter.1/start
 			fi
 
 			dev_json=$(jq ".[] | select(.device.title == \"$dev\").device" <<<"$DEVICE_CONFIGS")
@@ -95,7 +101,7 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 			for ((try=0; try < 5; try++)); do
 				(
 				sudo docker run --rm --privileged \
-					-v $HOME/shard_dl/$dev/$iter:/out \
+					-v $HOME/shard_dl/$dev/$iter.0:/out \
 					%%MM_IMAGE%% \
 						record_mm_har.bash \
 							%%CHROME_INIT_LOAD_WAIT%% \
@@ -107,11 +113,30 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 							"$user_agent" \
 							"${win_w}x${win_h}"
 				) &>/dev/null || true
-				if [[ -d $HOME/shard_dl/$dev/$iter/$(clean_url $site) ]]; then
+				if [[ -d $HOME/shard_dl/$dev/$iter.0/$(clean_url $site) && -f $HOME/shard_dl/$dev/$iter.0/hars/$(clean_url $site) ]]; then
 					break
 				fi
 			done
-			if [[ -d $HOME/shard_dl/$dev/$iter/$(clean_url $site) ]]; then
+			for ((try=0; try < 5; try++)); do
+				(
+				sudo docker run --rm --privileged \
+					-v $HOME/shard_dl/$dev/$iter.1:/out \
+					%%MM_IMAGE%% \
+						record_mm_har.bash \
+							%%CHROME_INIT_LOAD_WAIT%% \
+							%%CHROME_STARTUP_WAIT%% \
+							%%SITE_LOAD_WAIT%% \
+							/out/$(clean_url $site) \
+							/out/hars/$(clean_url $site) \
+							"$site" \
+							"$user_agent" \
+							"${win_w}x${win_h}"
+				) &>/dev/null || true
+				if [[ -d $HOME/shard_dl/$dev/$iter.1/$(clean_url $site) && -f $HOME/shard_dl/$dev/$iter.1/hars/$(clean_url $site) ]]; then
+					break
+				fi
+			done
+			if [[ -d $HOME/shard_dl/$dev/$iter.0/$(clean_url $site) && -d $HOME/shard_dl/$dev/$iter.1/$(clean_url $site) ]]; then
 				echo iter $iter got $site dev $dev
 			else
 				echo iter $iter fail $site dev $dev

@@ -12,8 +12,8 @@ RECORD_TIME_MIN=60
 WORKERS_PER_SHARD=10
 CHROME_INIT_LOAD_WAIT=5
 CHROME_STARTUP_WAIT=8
-SITE_LOAD_WAIT=100
-MM_IMAGE=quay.io/uluyol/pageload-mahimahi:0.4
+SITE_LOAD_WAIT=120
+MM_IMAGE=quay.io/uluyol/pageload-mahimahi:0.7
 
 remove_comments_empty() {
 	sed 's/#.*$//g' | sed '/^$/d'
