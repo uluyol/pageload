@@ -16,6 +16,7 @@ google-chrome-unstable \
 				--remote-debugging-port=9922 \
 				--disable-logging \
 				about:blank &
+pid=$!
 start=$(date +%s) || exit 1
 sleep $chrome_startup_wait
 timeout $second_wait \
@@ -25,7 +26,4 @@ timeout $second_wait \
 		-a "$user_agent" \
 		"$site" \
 		>"$har_out" || exit 1
-end=$(( start + chrome_startup_wait + second_wait ))
-while (( $(date +%s) < end )); do
-	sleep 1
-done
+kill -9 $pid
