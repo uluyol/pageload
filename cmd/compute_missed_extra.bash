@@ -58,8 +58,7 @@ sites=$(remove_comments_empty <"$sites_file")
 unset IFS
 
 procdir=$(mktemp -d)
-#trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
-echo $procdir
+trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
 
 if [[ $FILTER_ADS -eq 1 ]]; then
 	"$TOPDIR/cmd/filterads/runserver.bash" --tracking &
