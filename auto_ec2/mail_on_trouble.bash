@@ -29,6 +29,7 @@ while true; do
 			# already sent an email for this
 			true
 		else
+			echo "[$(date +'%m/%d %H:%M')] mailing for lag"
 			echo "$log" | mail -s "[down-mon] Substantial download lag" uluyol@umich.edu
 			sent_times+=("$last_log_line")
 		fi
@@ -44,11 +45,13 @@ while true; do
 			true
 		else
 			if [[ $sent -eq 0 ]]; then
+				echo "[$(date +'%m/%d %H:%M')] mailing for possible error"
 				echo "$log" | mail -s "[down-mon] Possible error on node" uluyol@umich.edu
 				sent=1
 			fi
 			sent_errors+=("${possible_errors[i]}")
 		fi
 	done
+	echo "[$(date +'%m/%d %H:%M')] sleep"
 	sleep 60
 done
