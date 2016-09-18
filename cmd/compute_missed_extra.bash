@@ -2,9 +2,9 @@
 
 set -e
 
-FILTER_ADS=${FILTER_ADS:-1}
-WINDOW_SIZE=4
-ALLOW_MISSING=1
+FILTER_ADS=${FILTER_ADS:-0}
+WINDOW_SIZE=3
+ALLOW_MISSING=0
 
 TOPDIR=$(realpath "${0%/*}"/..)
 
@@ -47,6 +47,11 @@ get_important() {
 	egrep '(javascript|ecmascript|html|css)'
 }
 
+if [[ $# -lt 2 ]]; then
+	echo usage: compute_missed_extra.bash sites_file run [run...] >&2
+	exit 123
+fi
+
 sites_file=$1; shift
 all_runs=("$@")
 devices=($(printf "%s\n" "${all_runs[@]}" | cut -d/ -f1 | sort | uniq))
@@ -75,7 +80,7 @@ mkdir -p "$resdir" || true
 
 site_pids=()
 for s in $sites; do
-	(
+	#(
 	s_clean=$(clean_url "$s")
 	dev_pids=()
 	for dev in "${devices[@]}"; do
@@ -92,11 +97,20 @@ for s in $sites; do
 		filtered_depbytes_ratios_overall=()
 		filtered_depbytes_ratios_offline=()
 		for r in "${runs[@]}"; do
-			if [[ ! -d "$r/$(clean_url "$s")" ]]; then
-				// skip missing directories, not much we can do here
+			if [[ ! -d "$r.0/$(clean_url "$s")" ]] \
+				|| [[ ! -f "$r.0/hars/$(clean_url "$s")" ]] \
+				|| [[ ! -d "$r.1/$(clean_url "$s")" ]] \
+				|| [[ ! -f "$r.1/hars/$(clean_url "$s")" ]]
+			then
+				# skip missing directories, not much we can do here
 				continue
 			fi
-			extracted_data=$(extract_records_index "$s" "$r/$(clean_url "$s")" | clip_after_iframes)
+			extract_records_index -preonload "$s" "$r.0" "$(clean_url "$s")" \
+				| clip_after_iframes > "$procdir/sites/${dev}_${s_clean}/runs/records_index.0.json"
+			[[ ${PIPESTATUS[0]} -eq 0 ]]
+			extract_records_index -preonload "$s" "$r.1" "$(clean_url "$s")" \
+				| clip_after_iframes > "$procdir/sites/${dev}_${s_clean}/runs/records_index.1.json"
+			[[ ${PIPESTATUS[0]} -eq 0 ]]
 			args=""
 			if [[ $FILTER_ADS -eq 1 ]]; then
 				args="--filter"
@@ -105,8 +119,7 @@ for s in $sites; do
 				get_run_deps_filtered_counts.py \
 					$args \
 					"$procdir/sites/${dev}_${s_clean}/runs" \
-					"${r//\//.}" \
-					<<<"$extracted_data"
+					"${r//\//.}"
 			))
 			filtered_depcount_ratios_overall+=(${ratios[0]})
 			filtered_depcount_ratios_offline+=(${ratios[1]})
@@ -118,7 +131,7 @@ for s in $sites; do
 			online_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}")
 			online_priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-priority-${r//\//.}")
 
-			echo $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}") : $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
+			echo $s: $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}") : $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 		done
 
 		mkdir -p "$resdir/sites/${dev}_${s_clean}/lists"
@@ -203,16 +216,16 @@ for s in $sites; do
 	for p in ${dev_pids[@]}; do
 		wait $p
 	done
-	) &
-	site_pids+=($!)
+	#) &
+	#site_pids+=($!)
 done
 
 fail=false
-for j in ${site_pids[@]}; do
-	if ! wait $j; then
-		fail=true
-	fi
-done
+#for j in ${site_pids[@]}; do
+#	if ! wait $j; then
+#		fail=true
+#	fi
+#done
 
 if [[ $fail == "true" ]]; then
 	exit 1

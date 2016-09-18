@@ -17,8 +17,16 @@ import (
 	pb "github.com/uluyol/pageload/cmd/mm/proto"
 )
 
-func matchesRequested(found, req string) bool {
-	return internal.CleanURL(found) == internal.CleanURL(req)
+// HARSchema is the schema for a HAR file that only includes
+// the fields that we care about.
+type HARSchema struct {
+	Log struct {
+		Entries []struct {
+			Request struct {
+				URL string
+			}
+		}
+	}
 }
 
 type Result struct {
@@ -76,6 +84,16 @@ func getResourceMeta(rr pb.RequestResponse) ResourceMeta {
 	}
 }
 
+func alwaysIncludeURL(u string) bool { return true }
+
+func makeOnlyPreOnloadURLs(m map[string]bool) func(u string) bool {
+	return func(u string) bool {
+		return m[u]
+	}
+}
+
+var onlyPreOnload = flag.Bool("preonload", true, "only include retreieved before the onload event")
+
 func main() {
 	flag.Parse()
 
@@ -83,7 +101,29 @@ func main() {
 	log.SetFlags(0)
 
 	site := flag.Arg(0)
-	saveDir := flag.Arg(1)
+	runDir := flag.Arg(1)
+	saveDirBase := flag.Arg(2)
+
+	harPath := filepath.Join(runDir, "hars", saveDirBase)
+	saveDir := filepath.Join(runDir, saveDirBase)
+
+	includeURL := alwaysIncludeURL
+
+	if *onlyPreOnload {
+		var har HARSchema
+		harData, err := ioutil.ReadFile(harPath)
+		if err != nil {
+			log.Fatalf("unable to read har data: %v", err)
+		}
+		if err := json.Unmarshal(harData, &har); err != nil {
+			log.Fatalf("har data is invalid: %v", err)
+		}
+		preOnloadSet := make(map[string]bool)
+		for _, e := range har.Log.Entries {
+			preOnloadSet[e.Request.URL] = true
+		}
+		includeURL = makeOnlyPreOnloadURLs(preOnloadSet)
+	}
 
 	fis, err := ioutil.ReadDir(saveDir)
 	if err != nil {
@@ -99,10 +139,12 @@ func main() {
 		var rr pb.RequestResponse
 		data, err := ioutil.ReadFile(save)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("warn: unable to read %s: %v", save, err)
+			continue
 		}
 		if err := proto.Unmarshal(data, &rr); err != nil {
-			log.Fatal(err)
+			log.Printf("warn: unable to unmarshal %s: %v", save, err)
+			continue
 		}
 
 		firstLine := string(rr.GetRequest().GetFirstLine())
@@ -110,8 +152,18 @@ func main() {
 			continue
 		}
 
+		rm := getResourceMeta(rr)
+
+		if !includeURL(rm.URL) {
+			continue
+		}
+
+		if strings.Contains(rm.URL, "://localhost") || strings.Contains(rm.URL, "://127.0.0.1") {
+			continue
+		}
+
 		reqResps = append(reqResps, rr)
-		result.Resources = append(result.Resources, getResourceMeta(rr))
+		result.Resources = append(result.Resources, rm)
 	}
 
 	var redirectChain []string
@@ -119,7 +171,7 @@ func main() {
 
 LoopStart:
 	for i, rr := range reqResps {
-		if !matchesRequested(result.Resources[i].URL, site) {
+		if internal.CleanURL(result.Resources[i].URL) != internal.CleanURL(site) {
 			continue
 		}
 

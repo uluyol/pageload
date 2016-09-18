@@ -3,7 +3,6 @@
 import argparse
 import json
 import os.path
-import sys
 import urlparse
 
 import HTMLParser
@@ -16,8 +15,8 @@ class Resource(object):
 		self.bytes = bytes_
 		self.content_type = content_type
 
-def main(records_index_input, outdir, runname, should_filter):
-	records_index = json.load(records_index_input)
+def load_records_index(input_path):
+	records_index = json.load(input_path)
 	all_resources = []
 	all_urls = set()
 	if records_index["resources"]:
@@ -31,11 +30,20 @@ def main(records_index_input, outdir, runname, should_filter):
 	online_urls = set(get_online_urls(last_index_url, records_index["indexBody"]))
 
 	online_deps = get_online_deps(all_resources, all_urls, index_urls, online_urls)
-	offline_deps = get_offline_deps(all_resources, all_urls, index_urls, online_urls)
+	offline_deps, offline_urls = get_offline_deps(all_resources, all_urls, index_urls, online_urls)
 
-	#for d in online_deps:
-	#	print "%s %s" % (d.url, d.content_type)
-	#return
+	return online_deps, offline_deps, offline_urls, last_index_url
+
+
+def main(records_index_input1, records_index_input2, outdir, runname, should_filter):
+	online_1, offline_1, offline_urls_1, li_url_1 = load_records_index(records_index_input1)
+	_, _, offline_urls_2, _ = load_records_index(records_index_input2)
+
+	to_keep = offline_urls_1.intersection(offline_urls_2)
+
+	online_deps = online_1
+	offline_deps = [d for d in offline_1 if d.url in to_keep]
+	last_index_url = li_url_1
 
 	offline_deps, filtered_ratios = filter_ads(should_filter, online_deps, offline_deps, last_index_url)
 
@@ -141,7 +149,7 @@ def filter_ads_by_url(offline_deps, page_url):
 def get_offline_deps(all_resources, in_all, in_index_redirects, in_online):
 	to_remove = in_index_redirects.union(in_online)
 	to_keep = in_all.difference(to_remove)
-	return [r for r in all_resources if r.url in to_keep]
+	return [r for r in all_resources if r.url in to_keep], to_keep
 
 def get_online_deps(all_resources, in_all, in_index_redirects, in_online):
 	to_keep = in_all.intersection(in_online)
@@ -189,4 +197,6 @@ if __name__ == "__main__":
 	parser.add_argument("runname", type=str,
 		help="run name, will be used for naming output")
 	args = parser.parse_args()
-	main(sys.stdin, args.outdir, args.runname, args.filter)
+	with open(os.path.join(args.outdir, "records_index.0.json")) as f1:
+		with open(os.path.join(args.outdir, "records_index.1.json")) as f2:
+			main(f1, f2, args.outdir, args.runname, args.filter)
