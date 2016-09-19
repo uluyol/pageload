@@ -4,9 +4,6 @@ set -e
 
 TOPDIR="${0%/*}"
 
-rm -rf processed
-mkdir -p processed/cdfs
-
 output_pdf_path=$1; shift
 depcount_pdf_path=${output_pdf_path%.pdf}-filtered-depcount-ratio.pdf
 depbytes_pdf_path=${output_pdf_path%.pdf}-filtered-depbytes-ratio.pdf
