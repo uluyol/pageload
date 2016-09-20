@@ -37,7 +37,7 @@ options(warn = -1)
 		scale_x_continuous(breaks=xaxis.breaks, limits=c(NA, tail(xaxis.breaks, 1))) +
 		xlab(xaxis.label) +
 		ylab("CDF") +
-		scale_color_brewer(palette="Set1") +
+		scale_color_brewer(palette="Dark2") +
 		theme_bw() +
 		theme(legend.title=element_blank())
 options(warn = 0)
