@@ -142,6 +142,11 @@ for s in $sites; do
 			echo $s: $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}") : $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 		done
 
+		if (( ${#dep_files[@]} == 0 )); then
+			# skip dev/sites with no data
+			continue
+		fi
+
 		mkdir -p "$resdir/sites/${dev}_${s_clean}/lists"
 		rm -f "$resdir/sites/${dev}_${s_clean}/missed"
 		rm -f "$resdir/sites/${dev}_${s_clean}/extra"
