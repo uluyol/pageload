@@ -35,22 +35,24 @@ func (set ResourceMetaSet) Add(e ResourceMeta) {
 }
 
 func (set ResourceMetaSet) All() []ResourceMeta {
-	var members []ResourceMeta
+	members := make([]ResourceMeta, 0, 10)
 	for e, _ := range set {
 		members = append(members, e)
 	}
 	return members
 }
 
-func addRecursive(set ResourceMetaSet, refResMap map[string][]ResourceMeta, ref string) {
+func addRecursive(set ResourceMetaSet, refResMap map[string][]ResourceMeta, ref string, visited map[string]bool) {
+	visited[ref] = true
 	for _, rm := range refResMap[ref] {
+		visited[rm.URL] = true
 		set.Add(rm)
 		if strings.Contains(rm.ContentType, "html") {
 			continue
 		}
 		for ref, _ := range refResMap {
 			if internal.CleanURL(ref) == internal.CleanURL(rm.URL) {
-				addRecursive(set, refResMap, ref)
+				addRecursive(set, refResMap, ref, visited)
 			}
 		}
 	}
@@ -84,10 +86,19 @@ func main() {
 	set := NewResourceMetaSet()
 	indexURL := result.IndexRedirectChain[len(result.IndexRedirectChain)-1]
 
+	visited := make(map[string]bool)
 	for ref, _ := range refererResourceMap {
 		if internal.CleanURL(ref) == internal.CleanURL(indexURL) {
 			// is root
-			addRecursive(set, refererResourceMap, ref)
+			addRecursive(set, refererResourceMap, ref, visited)
+		}
+	}
+	for ref, resources := range refererResourceMap {
+		if !visited[ref] {
+			// is rootless
+			for _, r := range resources {
+				set.Add(r)
+			}
 		}
 	}
 
