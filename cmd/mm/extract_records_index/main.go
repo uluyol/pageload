@@ -131,6 +131,7 @@ func main() {
 	}
 
 	var result Result
+	result.Resources = make([]ResourceMeta, 0, 10)
 
 	// unmarshal request responses
 	var reqResps []pb.RequestResponse
