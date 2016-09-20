@@ -36,9 +36,7 @@ sites_file=$1; shift
 pull_server=$1; shift
 run_paths=("$@")
 
-IFS=$'\n'
 sites=($(remove_comments_empty <$sites_file))
-unset IFS
 
 paths_in=$(mktemp)
 trap "rm -f $paths_in" SIGTERM SIGINT SIGQUIT EXIT
