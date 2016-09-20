@@ -4,7 +4,7 @@ set -e
 
 TOPDIR=$(realpath "${0%/*}"/..)
 
-export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR
+export PATH=$PATH:$TOPDIR/cmd/mm/bin:$TOPDIR/cmd:$TOPDIR/cmd/internal:$TOPDIR
 
 remove_comments_empty() {
 	sed 's/#.*$//g' | sed '/^$/d'
@@ -50,6 +50,7 @@ procdir=$(mktemp -d)
 trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
 
 mkdir -p "$procdir/sites"
+rm -rf "$resdir"
 mkdir -p "$resdir" || true
 
 for s in $sites; do
@@ -57,19 +58,40 @@ for s in $sites; do
 	dep_files=()
 	mkdir -p "$procdir/sites/$s_clean/runs"
 	for r in "${runs[@]}"; do
-		get_offline_dep_list.bash "$s" "$r" > "$procdir/sites/$s_clean/runs/${r//\//.}"
+		echo $r $s
+		if [[ ! -d "$r/$(clean_url "$s")" ]] || [[ ! -f "$r/hars/$(clean_url "$s")" ]]
+		then
+			# skip missing directories, not much we can do here
+			continue
+		fi
+
+		extract_records_index -preonload "$s" "$r" "$(clean_url "$s")" \
+			| clip_after_iframes \
+			| extracted_get_offline_dep_list.bash \
+			| cut -d' ' -f1 \
+			> "$procdir/sites/$s_clean/runs/${r//\//.}"
+
 		dep_files+=("$procdir/sites/$s_clean/runs/${r//\//.}")
 	done
 
+	if (( ${#dep_files[@]} != ${#runs[@]} )); then
+		echo skipping $s >&2
+		# skip sites with no data
+		continue
+	fi
 	mkdir -p "$resdir/sites/$s_clean"
 	cat "${dep_files[@]}" \
 		| sort \
 		| uniq -c \
-		| awk "\$1 == ${#runs[@]} { print \$2 }" \
+		| awk "\$1 >= ${#dep_files[@]} { print \$2 }" \
 		> "$resdir/sites/$s_clean/intersection"
 	cat "${dep_files[@]}" | sort | uniq > "$resdir/sites/$s_clean/union"
 	ni=$(wc -l <"$resdir/sites/$s_clean/intersection")
 	nu=$(wc -l <"$resdir/sites/$s_clean/union")
 
-	(perl -e "print ($ni / $nu)"; echo) > "$resdir/sites/$s_clean/iou_pct"
+	if [[ $nu -eq 0 ]]; then
+		echo 1 > "$resdir/sites/$s_clean/iou_pct"
+	else
+		python -c "print (float($ni) / $nu)" > "$resdir/sites/$s_clean/iou_pct"
+	fi
 done
