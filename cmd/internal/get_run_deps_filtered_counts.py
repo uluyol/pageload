@@ -48,25 +48,29 @@ def main(records_index_input1, records_index_input2, outdir, runname, should_fil
 	offline_deps.sort(key=lambda d: d.url)
 
 	with open(os.path.join(outdir, runname), "w") as f_all:
-		with open(os.path.join(outdir, "priority-" + runname), "w") as f_prio:
-			offline_printed = set()
-			for d in offline_deps:
-				if d.url in offline_printed:
-					continue
-				offline_printed.add(d.url)
-				f_all.write(d.url + "\n")
-				if is_important(d):
-					f_prio.write(d.url + "\n")
+		offline_printed = set()
+		for d in offline_deps:
+			if d.url in offline_printed:
+				continue
+			offline_printed.add(d.url)
+			f_all.write(d.url + "\n")
+
 	with open(os.path.join(outdir, "online-" + runname), "w") as f_all:
-		with open(os.path.join(outdir, "online-priority-" + runname), "w") as f_prio:
-			online_printed = set()
-			for d in online_deps:
-				if d.url in online_printed:
-					continue
-				online_printed.add(d.url)
-				f_all.write(d.url + "\n")
-				if is_important(d):
-					f_prio.write(d.url + "\n")
+		online_printed = set()
+		for d in online_deps:
+			if d.url in online_printed:
+				continue
+			online_printed.add(d.url)
+			f_all.write(d.url + "\n")
+
+	with open(os.path.join(outdir, "server-offline-" + runname), "w") as f_all:
+		server_offline_printed = set()
+		for u in offline_urls_2:
+			if u in server_offline_printed:
+				continue
+			server_offline_printed.add(u)
+			f_all.write(u + "\n")
+
 	print filtered_ratios["depcounts"]["overall"]
 	print filtered_ratios["depcounts"]["offline"]
 	print filtered_ratios["depbytes"]["overall"]

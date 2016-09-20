@@ -89,9 +89,8 @@ for s in $sites; do
 		runs=($(printf "%s\n" "${all_runs[@]}" | grep "^$dev" | sort -g -t/ -k2 | uniq))
 
 		dep_files=()
-		priority_dep_files=()
 		online_dep_files=()
-		online_priority_dep_files=()
+		server_offline_dep_files=()
 		filtered_depcount_ratios_overall=()
 		filtered_depcount_ratios_offline=()
 		filtered_depbytes_ratios_overall=()
@@ -137,9 +136,8 @@ for s in $sites; do
 			b2b_depbytes_ratios_offline+=(${ratios[7]})
 
 			dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
-			priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/priority-${r//\//.}")
 			online_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}")
-			online_priority_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/online-priority-${r//\//.}")
+			server_offline_dep_files+=("$procdir/sites/${dev}_${s_clean}/runs/server-offline-${r//\//.}")
 
 			echo $s: $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/online-${r//\//.}") : $(wc -l <"$procdir/sites/${dev}_${s_clean}/runs/${r//\//.}")
 		done
@@ -147,8 +145,10 @@ for s in $sites; do
 		mkdir -p "$resdir/sites/${dev}_${s_clean}/lists"
 		rm -f "$resdir/sites/${dev}_${s_clean}/missed"
 		rm -f "$resdir/sites/${dev}_${s_clean}/extra"
-		rm -f "$resdir/sites/${dev}_${s_clean}/priority-missed"
-		rm -f "$resdir/sites/${dev}_${s_clean}/priority-extra"
+		rm -f "$resdir/sites/${dev}_${s_clean}/missed-offline"
+		rm -f "$resdir/sites/${dev}_${s_clean}/extra-offline"
+		rm -f "$resdir/sites/${dev}_${s_clean}/missed-server"
+		rm -f "$resdir/sites/${dev}_${s_clean}/extra-server"
 
 		printf "%s\n" "${filtered_depcount_ratios_overall[@]}" \
 			> "$resdir/sites/${dev}_${s_clean}/depcount-ratio-overall"
@@ -174,6 +174,15 @@ for s in $sites; do
 					cat "${dep_files[j]}"
 				done
 			) | intersection "$((WINDOW_SIZE-ALLOW_MISSING))" \
+				| sort \
+				| uniq \
+				> "$procdir/sites/${dev}_${s_clean}/deps_window_offline_$i"
+
+			(
+				for ((j=i-WINDOW_SIZE; j < i; j++)); do
+					cat "${dep_files[j]}"
+				done
+			) | intersection "$((WINDOW_SIZE-ALLOW_MISSING))" \
 				| cat - "${online_dep_files[i]}" \
 				| sort \
 				| uniq \
@@ -184,54 +193,41 @@ for s in $sites; do
 				| uniq \
 				> "$procdir/sites/${dev}_${s_clean}/deps_test_$i"
 
+			cat "${server_offline_dep_files[i]}" "${online_dep_files[i]}" \
+				| sort \
+				| uniq \
+				> "$procdir/sites/${dev}_${s_clean}/deps_server_$i"
+
 			cat "$procdir/sites/${dev}_${s_clean}/deps_test_$i" \
 				"$procdir/sites/${dev}_${s_clean}/deps_window_$i" \
 				| intersection 2 \
 				> "$procdir/sites/${dev}_${s_clean}/deps_overlap_$i"
 
+			cat "$procdir/sites/${dev}_${s_clean}/deps_test_$i" \
+				"$procdir/sites/${dev}_${s_clean}/deps_window_offline_$i" \
+				| intersection 2 \
+				> "$procdir/sites/${dev}_${s_clean}/deps_overlap_offline_$i"
+
+			cat "$procdir/sites/${dev}_${s_clean}/deps_test_$i" \
+				"$procdir/sites/${dev}_${s_clean}/deps_server_$i" \
+				| intersection 2 \
+				> "$procdir/sites/${dev}_${s_clean}/deps_overlap_server_$i"
+
+			nw_off=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_window_offline_$i")
+			no_off=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_offline_$i")
 			nw=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_window_$i")
 			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i")
 			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_test_$i")
 
-			comm -23 \
-				"$procdir/sites/${dev}_${s_clean}/deps_test_$i" \
-				"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i" \
-				>"$resdir/sites/${dev}_${s_clean}/lists/missed"
+			ns=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_server_$i")
+			no_server=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_server_$i")
 
-			(python -c "print (float($nw - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/extra"
-			(python -c "print (float($na - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/missed"
-
-			(
-				for ((j=i-WINDOW_SIZE; j < i; j++)); do
-					cat "${priority_dep_files[j]}"
-				done
-			) | intersection "$((WINDOW_SIZE-ALLOW_MISSING))" \
-				| cat - "${online_priority_dep_files[i]}" \
-				| sort \
-				| uniq \
-				> "$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i"
-
-			cat "${priority_dep_files[i]}" "${online_priority_dep_files[i]}" \
-				| sort \
-				| uniq \
-				> "$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i"
-
-			cat "$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i" \
-				"$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i" \
-				| intersection 2 \
-				> "$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i"
-
-			comm -23 \
-				"$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i" \
-				"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i" \
-				>"$resdir/sites/${dev}_${s_clean}/lists/priority-missed"
-
-			nw=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_window_$i")
-			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_overlap_$i")
-			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/priority_deps_test_$i")
-
-			(python -c "print (float($nw - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-extra"
-			(python -c "print (float($na - $no) / max($na, 1))"; echo) >> "$resdir/sites/${dev}_${s_clean}/priority-missed"
+			python -c "print (float($nw - $no) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/extra"
+			python -c "print (float($na - $no) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/missed"
+			python -c "print (float($nw_off - $no_off) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/extra-offline"
+			python -c "print (float($na - $no_off) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/missed-offline"
+			python -c "print (float($ns - $no_server) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/extra-server"
+			python -c "print (float($na - $no_server) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/missed-server"
 		done
 		) &
 		dev_pids+=($!)
