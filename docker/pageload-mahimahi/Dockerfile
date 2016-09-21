@@ -33,6 +33,14 @@ RUN useradd -d /home/mahimahi -m mahimahi && \
 	gpasswd -a mahimahi plugdev && \
 	gpasswd -a mahimahi netdev
 
+ADD profiles/business.tar.gz /home/mahimahi/profiles/business
+ADD profiles/health.tar.gz /home/mahimahi/profiles/health
+ADD profiles/technology.tar.gz /home/mahimahi/profiles/technology
+ADD profiles/vehicles.tar.gz /home/mahimahi/profiles/vehicles
+
+RUN chmod 777 -R /home/mahimahi/profiles && \
+	chown mahimahi:mahimahi -R /home/mahimahi/profiles
+
 ADD record_mm_har.bash /usr/local/bin/record_mm_har.bash
 ADD record_mm_har_inner.bash /usr/local/bin/record_mm_har_inner.bash
 

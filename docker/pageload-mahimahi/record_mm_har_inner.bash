@@ -6,12 +6,13 @@ har_out=$3
 site="$4"
 user_agent="$5"
 dims="$6"
+user_data_dir="$7"
 
 google-chrome-unstable \
 				--ignore-certificate-errors \
 				--user-agent "$user_agent" \
 				--window 400x800 \
-				--user-data-dir=/tmp/fresh \
+				--user-data-dir="$user_data_dir" \
 				--disable-extensions \
 				--remote-debugging-port=9922 \
 				--disable-logging \
