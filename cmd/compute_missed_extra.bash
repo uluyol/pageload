@@ -48,22 +48,22 @@ get_important() {
 }
 
 if [[ $# -lt 2 ]]; then
-	echo usage: compute_missed_extra.bash sites_file run [run...] >&2
+	echo usage: compute_missed_extra.bash results_dest sites_file run [run...] >&2
 	exit 123
 fi
 
+results_dest=$1; shift
 sites_file=$1; shift
 all_runs=("$@")
 devices=($(printf "%s\n" "${all_runs[@]}" | cut -d/ -f1 | sort | uniq))
 
-resdir=results/missed_extra
+resdir="$results_dest/results/missed_extra"
 
-IFS=$'\n'
 sites=$(remove_comments_empty <"$sites_file")
-unset IFS
 
 procdir=$(mktemp -d)
-trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
+#trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
+echo $procdir
 
 if [[ $FILTER_ADS -eq 1 ]]; then
 	"$TOPDIR/cmd/filterads/runserver.bash" --tracking &
@@ -78,28 +78,29 @@ fi
 mkdir -p "$procdir/sites"
 mkdir -p "$resdir" || true
 
-site_pids=()
-for s in $sites; do
-	#(
-	s_clean=$(clean_url "$s")
-	dev_pids=()
+process_site() {
+	local s="$1"
+	local s_clean=$(clean_url "$s")
+	local dev_pids=()
+	local dev
+	local r
 	for dev in "${devices[@]}"; do
-		(
+		#(
 		mkdir -p "$procdir/sites/${dev}_${s_clean}/runs"
 		runs=($(printf "%s\n" "${all_runs[@]}" | grep "^$dev" | sort -g -t/ -k2 | uniq))
 
-		dep_files=()
-		online_dep_files=()
-		server_offline_dep_files=()
-		filtered_depcount_ratios_overall=()
-		filtered_depcount_ratios_offline=()
-		filtered_depbytes_ratios_overall=()
-		filtered_depbytes_ratios_offline=()
+		local dep_files=()
+		local online_dep_files=()
+		local server_offline_dep_files=()
+		local filtered_depcount_ratios_overall=()
+		local filtered_depcount_ratios_offline=()
+		local filtered_depbytes_ratios_overall=()
+		local filtered_depbytes_ratios_offline=()
 
-		b2b_depcount_ratios_overall=()
-		b2b_depcount_ratios_offline=()
-		b2b_depbytes_ratios_overall=()
-		b2b_depbytes_ratios_offline=()
+		local b2b_depcount_ratios_overall=()
+		local b2b_depcount_ratios_offline=()
+		local b2b_depbytes_ratios_overall=()
+		local b2b_depbytes_ratios_offline=()
 		for r in "${runs[@]}"; do
 			if [[ ! -d "$r.0/$(clean_url "$s")" ]] \
 				|| [[ ! -f "$r.0/hars/$(clean_url "$s")" ]] \
@@ -119,7 +120,7 @@ for s in $sites; do
 			if [[ $FILTER_ADS -eq 1 ]]; then
 				args="--filter"
 			fi
-			ratios=($(
+			local ratios=($(
 				get_run_deps_filtered_counts.py \
 					$args \
 					"$procdir/sites/${dev}_${s_clean}/runs" \
@@ -218,14 +219,14 @@ for s in $sites; do
 				| intersection 2 \
 				> "$procdir/sites/${dev}_${s_clean}/deps_overlap_server_$i"
 
-			nw_off=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_window_offline_$i")
-			no_off=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_offline_$i")
-			nw=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_window_$i")
-			no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i")
-			na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_test_$i")
+			local nw_off=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_window_offline_$i")
+			local no_off=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_offline_$i")
+			local nw=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_window_$i")
+			local no=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_$i")
+			local na=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_test_$i")
 
-			ns=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_server_$i")
-			no_server=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_server_$i")
+			local ns=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_server_$i")
+			local no_server=$(wc -l <"$procdir/sites/${dev}_${s_clean}/deps_overlap_server_$i")
 
 			python -c "print (float($nw - $no) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/extra"
 			python -c "print (float($na - $no) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/missed"
@@ -234,22 +235,29 @@ for s in $sites; do
 			python -c "print (float($ns - $no_server) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/extra-server"
 			python -c "print (float($na - $no_server) / max($na, 1))" >> "$resdir/sites/${dev}_${s_clean}/missed-server"
 		done
-		) &
-		dev_pids+=($!)
+		#) &
+		#dev_pids+=($!)
 	done
 	for p in ${dev_pids[@]}; do
 		wait $p
 	done
-	#) &
-	#site_pids+=($!)
+}
+
+site_pids=()
+for s in $sites; do
+	(process_site "$s") &
+	site_pids+=($!)
+	while [[ $(jobs | wc -l) -ge 30 ]]; do
+		sleep 3
+	done
 done
 
 fail=false
-#for j in ${site_pids[@]}; do
-#	if ! wait $j; then
-#		fail=true
-#	fi
-#done
+for j in ${site_pids[@]}; do
+	if ! wait $j; then
+		fail=true
+	fi
+done
 
 if [[ $fail == "true" ]]; then
 	exit 1
