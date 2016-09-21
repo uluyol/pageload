@@ -1,0 +1,139 @@
+http://fortune.com/
+
+# Landing pages
+http://fortune.com/international/
+http://fortune.com/retail/
+http://fortune.com/luxury/
+
+# Info pages
+http://beta.fortune.com/fortune500/apple-3
+http://beta.fortune.com/fortune500/mckesson-5
+http://beta.fortune.com/fortune500/general-motors-8
+
+# Articles
+http://fortune.com/2016/09/16/julian-assange-chelsea-manning/
+http://fortune.com/2016/09/16/donald-trump-mark-cuban-twitter-fight/
+http://fortune.com/2016/09/17/trump-childcare-prop-problem/
+
+# Landing pages (different languages)
+https://news.google.com/
+https://news.google.com/?edchanged=1&ned=ar_lb#0
+https://news.google.com/?edchanged=1&ned=de#0
+
+# Message board homepages
+https://m.reddit.com/
+https://m.reddit.com/r/all
+https://m.reddit.com/r/aww/
+
+# Message board comment pages
+https://m.reddit.com/r/AskReddit/comments/52eiac/how_does_one_stop_being_shy/
+https://m.reddit.com/r/dataisbeautiful/comments/52e9f8/number_of_times_ive_gotten_laid_the_last_25_years/
+https://m.reddit.com/r/explainlikeimfive/comments/52gqhf/eli5_how_can_individuals_donate_millions_of/
+
+# Message board about pages
+https://m.reddit.com/r/aww/about
+https://m.reddit.com/r/billiards/about
+https://m.reddit.com/r/blog/about
+
+# Sports league landing pages
+http://www.espn.com/
+http://www.espn.com/chalk/
+http://www.espn.com/college-football/
+
+# Sports article pages
+http://www.espn.com/college-football/story/_/id/17518449/big-12-college-football-playoff-hopes-take-big-hit-week-2
+http://www.espn.com/college-football/insider/story/_/id/17527308/mel-kiper-todd-mcshay-break-four-sleeper-teams-make-college-football-playoff-runs
+http://www.espn.com/mlb/insider/story/_/id/17517095/baltimore-orioles-rise-st-louis-cardinals-tough-road
+
+# Sports stats pages
+http://www.espn.com/mlb/team/stats/batting/_/name/bos
+http://www.espn.com/mlb/team/stats/batting/_/name/chc
+http://www.espn.com/mlb/team/stats/batting/_/name/col
+
+http://m.shutterstock.com/
+
+# Category listings
+http://m.shutterstock.com/categories/Backgrounds%2FTextures/3
+http://m.shutterstock.com/categories/Buildings%2FLandmarks/2
+http://m.shutterstock.com/categories/Business/4
+
+# Image pages
+http://m.shutterstock.com/images/110426801
+http://m.shutterstock.com/images/159286760
+http://m.shutterstock.com/images/202352932
+
+# Landing pages
+http://www.cbsnews.com/
+http://www.cbsnews.com/48-hours/
+http://www.cbsnews.com/60-minutes/
+
+# Articles
+http://www.cbsnews.com/news/bear-killed-after-wandering-into-ontario-restaurant/
+http://www.cbsnews.com/news/cape-cod-beaches-close-after-great-white-shark-kills-seal/
+http://www.cbsnews.com/news/cristiano-ronaldo-and-model-irina-shayk-split-after-five-years/
+
+# Sports landing pages
+http://www.skysports.com/
+http://www.skysports.com/cricket
+http://www.skysports.com/cycling
+
+# Soccer match pages
+http://www.skysports.com/football/barcelona-vs-celtic/366845
+http://www.skysports.com/football/benfica-vs-besiktas/366846
+http://www.skysports.com/football/dynamo-kiev-vs-napoli/366847
+
+# Video pages
+http://www.skysports.com/watch/video/10552286/wwe-smackdown-25th-august
+http://www.skysports.com/watch/video/10575484/bravo-will-make-mistakes
+http://www.skysports.com/watch/video/10575665/senderos-sent-off-on-debut
+
+http://mobile.reuters.com/
+
+# Articles
+http://mobile.reuters.com/article/idUSKCN11758X
+http://mobile.reuters.com/article/idUSKCN11E2X9
+http://mobile.reuters.com/article/idUSKCN11F2QK
+
+# Video pages
+http://mobile.reuters.com/video/2016/03/28/reuse-and-abuse-how-asias-test-prep-cent?videoId=367902325&videoChannel=117777
+http://mobile.reuters.com/video/2016/08/05/w-virginia-weathers-fallout-from-coal-co?videoId=369487400&videoChannel=117777
+http://mobile.reuters.com/video/2016/09/08/asteroid-probe-may-find-clues-to-origins?videoId=369791006&videoChannel=6
+
+# Financial market pages
+http://mobile.reuters.com/finance/markets/index?symbol=.BVSP
+http://mobile.reuters.com/finance/markets/index?symbol=.CSI300
+http://mobile.reuters.com/finance/markets/index?symbol=.DJI
+
+https://www.wunderground.com/
+
+# Local weather pages
+https://www.wunderground.com/q/zmw:00000.1.08160
+https://www.wunderground.com/q/zmw:00000.1.17260
+https://www.wunderground.com/q/zmw:00000.1.47584
+
+# Historical climate pages
+https://www.wunderground.com/history/airport/EDDL/2016/9/12/DailyHistory.html
+https://www.wunderground.com/history/airport/KMGW/2016/9/12/DailyHistory.html
+https://www.wunderground.com/history/airport/KPAH/2016/9/12/DailyHistory.html
+
+# Image pages
+https://www.wunderground.com/wximage/earthlydragonfly/370
+https://www.wunderground.com/wximage/Hamptonite/3524
+https://www.wunderground.com/wximage/Hamptonite/3538
+
+http://abcnews.go.com/
+
+# Landing pages
+http://abcnews.go.com/Blotter
+http://abcnews.go.com/Business
+http://abcnews.go.com/Entertainment
+
+# Articles
+http://abcnews.go.com/Entertainment/pitch-perfect-stars-flock-anna-camp-skylar-astins/story?id=42010596
+http://abcnews.go.com/Health/teen-fourth-person-survive-brain-eating-amoeba-50/story?id=41589808
+http://abcnews.go.com/International/911-thought-generation-long-struggle-wrong/story?id=41926551
+
+# Photo pages
+http://abcnews.go.com/Business/photos/homes-sale-fabulous-foyers-34680664/image-homes-sale-fabulous-foyers-34682394
+http://abcnews.go.com/Entertainment/photos/celebrity-animal-lovers-3437097
+http://abcnews.go.com/International/photos/earthquake-hits-central-italy-41612093
