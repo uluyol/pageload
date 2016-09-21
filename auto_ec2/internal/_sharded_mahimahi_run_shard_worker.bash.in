@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 EMULATE_DEVICES_CSV="%%EMULATE_DEVICES%%"
-USER_PROFILES_CSV=%%USER_PROFILES%%"
+USER_PROFILES_CSV="%%USER_PROFILES%%"
 
 IFS=,
 EMULATE_DEVICES=($EMULATE_DEVICES_CSV)
-USER_PROFILES=($USER_PROFILES)
+USER_PROFILES=($USER_PROFILES_CSV)
 unset IFS
 
 DEVICE_CONFIGS='[{
@@ -93,6 +93,7 @@ iter=$1
 echo pull image
 sudo docker pull %%MM_IMAGE%% &>/dev/null || true
 
+echo random sleep
 sleep $((RANDOM % 30))
 
 for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
@@ -136,7 +137,8 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 								/out/hars/$(clean_url $site) \
 								"$site" \
 								"$user_agent" \
-								"${win_w}x${win_h}"
+								"${win_w}x${win_h}" \
+								"$profile"
 					) &>/dev/null || true
 					if [[ -d $HOME/shard_dl/$dev/$iter.$profile.0/$(clean_url $site) && -f $HOME/shard_dl/$dev/$iter.$profile.0/hars/$(clean_url $site) ]]; then
 						break
@@ -155,7 +157,8 @@ for ((_loopiter=0; _loopiter < 10; _loopiter++)); do
 								/out/hars/$(clean_url $site) \
 								"$site" \
 								"$user_agent" \
-								"${win_w}x${win_h}"
+								"${win_w}x${win_h}" \
+								"$profile"
 					) &>/dev/null || true
 					if [[ -d $HOME/shard_dl/$dev/$iter.$profile.1/$(clean_url $site) && -f $HOME/shard_dl/$dev/$iter.$profile.1/hars/$(clean_url $site) ]]; then
 						break

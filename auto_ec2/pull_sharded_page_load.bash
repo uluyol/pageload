@@ -27,8 +27,8 @@ while true; do
 		fi
 		for dev in $(SSH "$n" "ls -1 shard_dl"); do
 			iters=($(SSH "$n" "ls -1 shard_dl/$dev" | sort -g))
-			# leave the last 4 for now (2 every hour), they may be incomplete
-			for ((i=0; i < ${#iters[@]}-4; i++)); do
+			# leave the last 20 for now (2 every hour, 5 profiles), they may be incomplete
+			for ((i=0; i < ${#iters[@]}-10; i++)); do
 				to_move="$dev/${iters[i]}"
 				echo "[$(date +'%m/%d %H:%M')] get node $node_i $to_move    ($n)"
 				(cd "$destdir" && SSH "$n" "cd shard_dl && tar cz $to_move" | timeout 300 tar -xzf -)
