@@ -8,12 +8,20 @@ EMULATE_DEVICES=(
 	nexus10
 )
 
+USER_PROFILES=(
+	empty
+	business
+	health
+	technology
+	vehicles
+)
+
 RECORD_TIME_MIN=60
 WORKERS_PER_SHARD=10
 CHROME_INIT_LOAD_WAIT=5
 CHROME_STARTUP_WAIT=8
 SITE_LOAD_WAIT=120
-MM_IMAGE=quay.io/uluyol/pageload-mahimahi:0.7
+MM_IMAGE=quay.io/uluyol/pageload-mahimahi:0.8
 
 remove_comments_empty() {
 	sed 's/#.*$//g' | sed '/^$/d'
@@ -58,6 +66,7 @@ for ((i=0; i < ${#nodes[@]}; i++)); do
 				-e "s/%%WORKER_ID%%/$j/g" \
 				-e "s|%%MM_IMAGE%%|$MM_IMAGE|g" \
 				-e "s|%%EMULATE_DEVICES%%|$(strjoin , "${EMULATE_DEVICES[@]}")|g" \
+				-e "s|%%USER_PROFILES%%|$(strjoin , "${USER_PROFILES[@]}")|g" \
 				-e "s|%%WIN_WS%%|$WIN_W|g" \
 				-e "s|%%WIN_HS%%|$WIN_H|g" \
 				-e "s/%%RECORD_TIME_MIN%%/$RECORD_TIME_MIN/g" \
