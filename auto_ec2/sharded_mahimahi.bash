@@ -4,8 +4,6 @@ set -e
 
 EMULATE_DEVICES=(
 	iphone6
-	nexus6
-	nexus10
 )
 
 USER_PROFILES=(
