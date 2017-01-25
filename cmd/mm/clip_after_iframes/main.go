@@ -84,7 +84,10 @@ func main() {
 	}
 
 	set := NewResourceMetaSet()
-	indexURL := result.IndexRedirectChain[len(result.IndexRedirectChain)-1]
+	var indexURL string
+	if len(result.IndexRedirectChain) > 0 {
+		indexURL = result.IndexRedirectChain[len(result.IndexRedirectChain)-1]
+	}
 
 	visited := make(map[string]bool)
 	for ref, _ := range refererResourceMap {

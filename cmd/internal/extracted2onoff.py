@@ -32,9 +32,11 @@ def main(records_index, only_important_deps):
 			resources.append(Resource(r["url"], r["bytes"], r["contentType"]))
 			urls.add(r["url"])
 	index_urls = set()
-	for u in records_index["indexRedirectChain"]:
-		index_urls.add(u)
-	last_index_url = records_index["indexRedirectChain"][-1]
+	last_index_url = ""
+	if records_index["indexRedirectChain"]:
+		for u in records_index["indexRedirectChain"]:
+			index_urls.add(u)
+		last_index_url = records_index["indexRedirectChain"][-1]
 	online_urls = set(get_online_urls(last_index_url, records_index["indexBody"]))
 
 	online_deps_gen = unique_resources(only_online_deps(resources, urls, online_urls))
