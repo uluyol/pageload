@@ -2,21 +2,24 @@
 
 import sys
 
-p1 = sys.argv[1]
-p2 = sys.argv[2]
+input_lines = []
 
-lines1 = set()
-lines2 = set()
+for path in sys.argv[1:]:
+	lines = set()
+	with open(path) as f:
+		for l in f:
+			lines.add(l.strip())
+	input_lines.append(lines)
 
-with open(p1) as f1:
-	for line in f1:
-		lines1.add(line.strip())
+if len(input_lines) == 0:
+	print(0)
+	sys.exit(0)
 
-with open(p2) as f2:
-	for line in f2:
-		lines2.add(line.strip())
+intersection = input_lines[0].copy()
+union = input_lines[0].copy()
 
-intersection = lines1.intersection(lines2)
-union = lines1.union(lines2)
+for lines in input_lines[1:]:
+	intersection = intersection.intersection(lines)
+	union = union.union(lines)
 
 print(float(len(intersection)) / max(len(union), 1))
