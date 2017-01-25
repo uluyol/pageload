@@ -54,7 +54,8 @@ sites=$(remove_comments_empty <"$sites_file")
 unset IFS
 
 procdir=$(mktemp -d)
-trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
+echo $procdir
+#trap "rm -rf $procdir" SIGTERM SIGQUIT EXIT SIGINT
 
 get_stable_set() {
 	local snap=$1; shift
@@ -62,7 +63,6 @@ get_stable_set() {
 	local s=$1; shift
 
 	local s_clean=$(clean_url $s)
-	local depfiles=()
 	local r
 	mkdir "$procdir/${snap}.${profile}_${s_clean}"
 	for load in 0 1; do
@@ -72,19 +72,22 @@ get_stable_set() {
 		fi
 
 		extract_records_index -preonload "$s" "$dev/$snap.$profile.$load" "$s_clean" \
-			| clip_after_iframes \
-			| extracted_get_offline_dep_list.bash \
-			| cut -d' ' -f1 \
+			| extracted2onoff.py \
 			> "$procdir/${snap}.${profile}_${s_clean}/$load"
-
-		depfiles+=("$procdir/${snap}.${profile}_${s_clean}/$load")
 	done
 
-	cat "${depfiles[@]}" \
-		| sort \
-		| uniq -c \
-		| awk "\$1 >= ${#depfiles[@]} { print \$2 }" \
-		> "$procdir/${snap}.${profile}_${s_clean}/stable_set"
+	local onoff=$(
+		cat "$procdir/${snap}.${profile}_${s_clean}"/{0,1} \
+			| jq -s . \
+			| unfair_intersection.py
+	)
+
+	jq -r '.online[].url' <<<"$onoff" | sort | uniq \
+		> "$procdir/${snap}.${profile}_${s_clean}/stable_online"
+	jq -r '.offline[].url' <<<"$onoff" | sort | uniq \
+		> "$procdir/${snap}.${profile}_${s_clean}/stable_offline"
+	cat "$procdir/${snap}.${profile}_${s_clean}"/stable_{online,offline} \
+		> "$procdir/${snap}.${profile}_${s_clean}/stable_all"
 }
 
 process_site() {
@@ -93,15 +96,21 @@ process_site() {
 	local s_clean=$(clean_url $s)
 
 	local p
-	local inputs=()
+	local on_inputs=()
+	local off_inputs=()
+	local all_inputs=()
 	for p in "${profiles[@]}"; do
 		echo $snap.$p $s
 		get_stable_set $snap $p $s || continue
 
-		inputs+=("$procdir/${snap}.${p}_${s_clean}/stable_set")
+		on_inputs+=("$procdir/${snap}.${p}_${s_clean}/stable_online")
+		off_inputs+=("$procdir/${snap}.${p}_${s_clean}/stable_offline")
+		all_inputs+=("$procdir/${snap}.${p}_${s_clean}/stable_all")
 	done
 
-	iou.py "${inputs[@]}" > "$resdir/${snap}_${s_clean}"
+	iou.py "${on_inputs[@]}" > "$resdir/online_${snap}_${s_clean}"
+	iou.py "${off_inputs[@]}" > "$resdir/offline_${snap}_${s_clean}"
+	iou.py "${all_inputs[@]}" > "$resdir/all_${snap}_${s_clean}"
 }
 
 site_pids=()
