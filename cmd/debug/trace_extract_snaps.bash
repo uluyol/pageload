@@ -25,6 +25,6 @@ jq -r -r '.[] | select(.name == "Screenshot") | (.ts | tostring) + " " + .args.s
 				start=$ts
 			fi
 			t=$((ts-start)) 
-			echo "$(cut -d' ' -f2 <<<"$line")" | base64 -D > "$outdir/$t.jpg"
+			echo "$(cut -d' ' -f2 <<<"$line")" | base64 -D > "$outdir/$(printf "%05d" $t).jpg"
 		done
 	)

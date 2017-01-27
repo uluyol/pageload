@@ -134,3 +134,34 @@ done
 if [[ $fail == "true" ]]; then
 	exit 1
 fi
+
+
+for ((i=2; i < ${#runs[@]}; i++)); do
+	for s in $sites; do
+		(
+		s_clean=$(clean_url $s)
+		multistep_off_inputs=()
+		for p in "${profiles[@]}"; do
+			stables=()
+			for snap in ${runs[i-2]} ${runs[i-1]} ${runs[i]}; do
+				stables+=("$procdir/${snap}.${p}_${s_clean}/stable_offline")
+			done
+			cat "${stables[@]}" \
+				| sort \
+				| uniq -c \
+				| awk '$1 >= 3 {print $2;}' \
+				> "$procdir/${runs[i]}.${p}_${s_clean}/stable_multistep_offline"
+			multistep_off_inputs+=("$procdir/${runs[i]}.${p}_${s_clean}/stable_multistep_offline")
+		done
+		for ((ii=0; ii < ${#multistep_off_inputs[@]}; ii++)); do
+			for ((ij=ii+1; ij < ${#multistep_off_inputs[@]}; ij++)); do
+				iou.py "${multistep_off_inputs[ii]}" "${multistep_off_inputs[ij]}" \
+					> "$resdir/combined_pairwise_offline_${runs[i]}_${s_clean}.$ii.$ij"
+			done
+		done
+		iou.py "${multistep_off_inputs[@]}" > "$resdir/combined_offline_${runs[i]}_${s_clean}"
+		) &
+	done
+done
+
+wait
